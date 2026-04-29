@@ -1,7 +1,7 @@
 {
   "name": "skills",
   "metadata": {
-    "description": "Vladimir Suponin's curated Claude Code skills for spec-driven engineering with AI agents"
+    "description": "Vladimir Suponin's Claude Code skills marketplace — curated forks and personal authored skills"
   },
   "owner": {
     "name": "Vladimir Suponin",
@@ -9,10 +9,10 @@
   },
   "plugins": [
     {
-      "name": "skills",
-      "description": "Curated Claude Code skills: grill-me, tdd, to-prd, to-issues, diagnose, zoom-out, improve-codebase-architecture",
+      "name": "pocock-skills",
+      "description": "Curated subset of mattpocock/skills with local-markdown adaptations: grill-me, tdd, to-prd, to-issues, diagnose, zoom-out, improve-codebase-architecture",
       "category": "development",
-      "source": "./plugins/skills",
+      "source": "./plugins/pocock-skills",
       "homepage": "https://github.com/Volodyasp/skills"
     }
   ]

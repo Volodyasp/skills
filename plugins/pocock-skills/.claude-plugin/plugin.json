@@ -1,7 +1,7 @@
 {
-  "name": "skills",
-  "version": "0.2.0",
-  "description": "Curated Claude Code skills for spec-driven engineering with AI agents. Pipeline: grill-me → to-prd → to-issues writes to local markdown under docs/specs/<slug>/. Plus tdd, diagnose, zoom-out, improve-codebase-architecture. Based on mattpocock/skills (MIT) with personal selection.",
+  "name": "pocock-skills",
+  "version": "0.1.0",
+  "description": "Curated subset of mattpocock/skills with local-markdown adaptations. Pipeline: grill-me → to-prd → to-issues writes to docs/specs/<slug>/. Plus tdd, diagnose, zoom-out, improve-codebase-architecture.",
   "author": {
     "name": "Vladimir Suponin",
     "email": "suponin.vldmr@gmail.com"
@@ -24,6 +24,7 @@
     "spec-driven",
     "prd",
     "agentic-workflow",
-    "vertical-slice"
+    "vertical-slice",
+    "pocock"
   ]
 }

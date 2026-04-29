@@ -1,8 +1,32 @@
 # skills
 
-A curated subset of [mattpocock/skills](https://github.com/mattpocock/skills) plus my own adaptations. Designed for spec-driven engineering with AI agents — brainstorm, plan, slice, implement.
+Vladimir Suponin's Claude Code skills marketplace. Home for curated forks and personal authored skills.
 
-## Pipeline
+## Plugins
+
+| Plugin | Description |
+|---|---|
+| [`pocock-skills`](./plugins/pocock-skills/) | Curated subset of [mattpocock/skills](https://github.com/mattpocock/skills) with local-markdown adaptations. Spec-driven engineering pipeline: `grill-me → to-prd → to-issues`, plus `tdd`, `diagnose`, `zoom-out`, `improve-codebase-architecture`. |
+
+More plugins to come (personal authored skills, additional curated forks).
+
+## Installation
+
+Add the marketplace once:
+
+```bash
+claude plugin marketplace add Volodyasp/skills
+```
+
+Then install the plugins you want:
+
+```bash
+claude plugin install pocock-skills@skills
+```
+
+Restart Claude Code after install.
+
+## pocock-skills pipeline
 
 The main flow: spec it, slice it, hand it off to a runner.
 
@@ -25,30 +49,7 @@ Plus utility skills:
 - `/improve-codebase-architecture` — find deepening opportunities
 - `/tdd` — discipline for red-green-refactor
 
-## Installation
-
-As a Claude Code plugin:
-
-```bash
-claude plugin marketplace add Volodyasp/skills
-claude plugin install skills@skills
-```
-
-After install, restart Claude Code. The skills become available as `/grill-me`, `/to-prd`, etc.
-
-## Skills included
-
-| Skill | Purpose |
-|---|---|
-| `grill-me` | Interview-style stress-test of a plan or design |
-| `to-prd` | Convert conversation context into a PRD (local markdown) |
-| `to-issues` | Decompose PRD into vertical-slice issues (local markdown) |
-| `tdd` | Test-driven development discipline |
-| `diagnose` | Disciplined debug loop for hard bugs and performance regressions |
-| `zoom-out` | Map an unfamiliar codebase area to higher-level abstractions |
-| `improve-codebase-architecture` | Find deepening opportunities, informed by CONTEXT.md and ADRs |
-
-## Layout convention
+### Layout convention
 
 ```
 docs/specs/<story-slug>/
@@ -61,14 +62,8 @@ docs/specs/<story-slug>/
 
 Portable across any tracker (or no tracker at all).
 
-## Differences from upstream
-
-- **Curated**: 7 skills selected from the larger upstream set.
-- **`to-prd` and `to-issues` write to local markdown** instead of `gh issue create`. Outputs land in `docs/specs/<slug>/`.
-- **Plugin packaging**: distributable via `claude plugin marketplace add`.
-
 ## Attribution
 
-Original skills authored by [Matt Pocock](https://github.com/mattpocock). Distributed under MIT — see [LICENSE](LICENSE).
+`pocock-skills` derives from [mattpocock/skills](https://github.com/mattpocock/skills) by Matt Pocock, distributed under MIT — see [LICENSE](LICENSE).
 
-For the full collection (including skills not selected here), see the upstream.
+For the full upstream collection (including skills not selected here), see the source.
