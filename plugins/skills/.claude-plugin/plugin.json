@@ -1,7 +1,7 @@
 {
   "name": "skills",
   "version": "0.2.0",
-  "description": "Curated Claude Code skills for Python/FastAPI/RAG/agent development. Pipeline: grill-me → to-prd → to-issues → tdd. Plus diagnose for debugging, zoom-out for codebase navigation, improve-codebase-architecture for refactoring. Based on mattpocock/skills (MIT) with personal selection.",
+  "description": "Curated Claude Code skills for spec-driven engineering with AI agents. Pipeline: grill-me → to-prd → to-issues writes to local markdown under docs/specs/<slug>/. Plus tdd, diagnose, zoom-out, improve-codebase-architecture. Based on mattpocock/skills (MIT) with personal selection.",
   "author": {
     "name": "Vladimir Suponin",
     "email": "suponin.vldmr@gmail.com"
@@ -21,9 +21,8 @@
     "claude-code",
     "skills",
     "tdd",
-    "rag",
-    "python",
-    "fastapi",
+    "spec-driven",
+    "prd",
     "agentic-workflow",
     "vertical-slice"
   ]

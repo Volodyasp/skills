@@ -1,10 +1,10 @@
 # skills
 
-Curated Claude Code skills for Python/FastAPI/RAG/agent development.
-
-A personal selection from [mattpocock/skills](https://github.com/mattpocock/skills) with my own adaptations. Designed around the spec-driven AFK workflow: brainstorm → plan → vertical-slice → implement.
+A curated subset of [mattpocock/skills](https://github.com/mattpocock/skills) plus my own adaptations. Designed for spec-driven engineering with AI agents — brainstorm, plan, slice, implement.
 
 ## Pipeline
+
+The main flow: spec it, slice it, hand it off to a runner.
 
 ```
 /grill-me      → stress-test the plan with interview-style questions
@@ -12,14 +12,12 @@ A personal selection from [mattpocock/skills](https://github.com/mattpocock/skil
 /to-issues     → break PRD into vertical-slice issues
                  under docs/specs/<slug>/issues/NNN-<slug>.md
                   ↓
-                /to-ralph (separate skill) → Ralph loop artifacts
-                  ↓
-                ralph (frankbria/ralph-claude-code) implements
+                <your runner of choice — Ralph loop, worktree, manual, etc.>
                   ↓
 /diagnose      → debug if something breaks
 ```
 
-All artifacts are local markdown — no GitHub Issues / Azure DevOps coupling.
+All artifacts are local markdown — no coupling to GitHub Issues, Azure DevOps, Linear, or any tracker. Issues are just files in your repo.
 
 Plus utility skills:
 
@@ -43,24 +41,14 @@ After install, restart Claude Code. The skills become available as `/grill-me`, 
 | Skill | Purpose |
 |---|---|
 | `grill-me` | Interview-style stress-test of a plan or design |
-| `to-prd` | Convert conversation context into a PRD document |
-| `to-issues` | Decompose PRD into vertical-slice issues |
+| `to-prd` | Convert conversation context into a PRD (local markdown) |
+| `to-issues` | Decompose PRD into vertical-slice issues (local markdown) |
 | `tdd` | Test-driven development discipline |
 | `diagnose` | Disciplined debug loop for hard bugs and performance regressions |
 | `zoom-out` | Map an unfamiliar codebase area to higher-level abstractions |
 | `improve-codebase-architecture` | Find deepening opportunities, informed by CONTEXT.md and ADRs |
 
-## Attribution
-
-Original skills authored by [Matt Pocock](https://github.com/mattpocock). Distributed under MIT — see [LICENSE](LICENSE).
-
-This repo represents a curated subset with selection choices appropriate for solo Python/RAG development. For the full collection (including skills not included here), see the upstream.
-
-## Conventions
-
-`to-prd` and `to-issues` write everything to local markdown under `docs/specs/<slug>/`. They do not call `gh issue create` or any other tracker. This makes the pipeline portable across GitHub / Azure DevOps / Linear / no tracker at all — issues are just files in your repo.
-
-Layout:
+## Layout convention
 
 ```
 docs/specs/<story-slug>/
@@ -70,3 +58,17 @@ docs/specs/<story-slug>/
     002-<slice-slug>.md
     ...
 ```
+
+Portable across any tracker (or no tracker at all).
+
+## Differences from upstream
+
+- **Curated**: 7 skills selected from the larger upstream set.
+- **`to-prd` and `to-issues` write to local markdown** instead of `gh issue create`. Outputs land in `docs/specs/<slug>/`.
+- **Plugin packaging**: distributable via `claude plugin marketplace add`.
+
+## Attribution
+
+Original skills authored by [Matt Pocock](https://github.com/mattpocock). Distributed under MIT — see [LICENSE](LICENSE).
+
+For the full collection (including skills not selected here), see the upstream.

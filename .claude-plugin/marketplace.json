@@ -1,7 +1,7 @@
 {
   "name": "skills",
   "metadata": {
-    "description": "Vladimir Suponin's curated Claude Code skills for AI/RAG/FastAPI work"
+    "description": "Vladimir Suponin's curated Claude Code skills for spec-driven engineering with AI agents"
   },
   "owner": {
     "name": "Vladimir Suponin",
