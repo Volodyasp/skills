@@ -1,29 +1,35 @@
 ---
 name: to-issues
-description: Break a plan, spec, or PRD into independently-grabbable issues on the project issue tracker using tracer-bullet vertical slices. Use when user wants to convert a plan into issues, create implementation tickets, or break down work into issues.
+description: Break a PRD or plan into independently-grabbable vertical-slice issues as local markdown files under `docs/specs/<slug>/issues/`. Use when user wants to convert a PRD into implementation tickets for local spec-driven workflow.
 ---
 
 # To Issues
 
-Break a plan into independently-grabbable issues using vertical slices (tracer bullets).
+Break a plan into independently-grabbable issues using **vertical slices** (tracer bullets). Each slice becomes a numbered markdown file under `docs/specs/<slug>/issues/`.
 
-The issue tracker and triage label vocabulary should have been provided to you — run `/setup-matt-pocock-skills` if not.
+This is the second step of the local spec pipeline: `/to-prd → /to-issues → /to-ralph`.
 
 ## Process
 
-### 1. Gather context
+### 1. Locate the PRD
 
-Work from whatever is already in the conversation context. If the user passes an issue reference (issue number, URL, or path) as an argument, fetch it from the issue tracker and read its full body and comments.
+Determine the story slug:
+
+- If the user passes a slug as an argument, use it.
+- Otherwise, list directories under `docs/specs/` and ask the user which one to decompose.
+- The PRD must be at `docs/specs/<slug>/PRD.md`. If it is missing, stop and tell the user to run `/to-prd` first.
+
+Read the PRD fully. If the PRD references prior context not in your conversation (other ADRs, related specs), read those too.
 
 ### 2. Explore the codebase (optional)
 
-If you have not already explored the codebase, do so to understand the current state of the code. Issue titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
+If you have not already explored the codebase, do so. Issue titles and descriptions should use the project's domain glossary, and respect ADRs in the area being touched.
 
 ### 3. Draft vertical slices
 
 Break the plan into **tracer bullet** issues. Each issue is a thin vertical slice that cuts through ALL integration layers end-to-end, NOT a horizontal slice of one layer.
 
-Slices may be 'HITL' or 'AFK'. HITL slices require human interaction, such as an architectural decision or a design review. AFK slices can be implemented and merged without human interaction. Prefer AFK over HITL where possible.
+Slices may be **HITL** (Human-In-The-Loop) or **AFK** (Away-From-Keyboard). HITL slices require human interaction such as an architectural decision or design review. AFK slices can be implemented and merged without human interaction. Prefer AFK over HITL where possible.
 
 <vertical-slice-rules>
 - Each slice delivers a narrow but COMPLETE path through every layer (schema, API, UI, tests)
@@ -35,34 +41,50 @@ Slices may be 'HITL' or 'AFK'. HITL slices require human interaction, such as an
 
 Present the proposed breakdown as a numbered list. For each slice, show:
 
-- **Title**: short descriptive name
+- **Title**: short descriptive name (will become the filename slug)
 - **Type**: HITL / AFK
 - **Blocked by**: which other slices (if any) must complete first
-- **User stories covered**: which user stories this addresses (if the source material has them)
+- **User stories covered**: which user stories from the PRD this addresses
 
 Ask the user:
 
 - Does the granularity feel right? (too coarse / too fine)
 - Are the dependency relationships correct?
 - Should any slices be merged or split further?
-- Are the correct slices marked as HITL and AFK?
+- Are HITL/AFK markings correct?
 
 Iterate until the user approves the breakdown.
 
-### 5. Publish the issues to the issue tracker
+### 5. Write the issue files
 
-For each approved slice, publish a new issue to the issue tracker. Use the issue body template below. Apply the `needs-triage` triage label so each issue enters the normal triage flow.
+For each approved slice, create one markdown file at:
 
-Publish issues in dependency order (blockers first) so you can reference real issue identifiers in the "Blocked by" field.
+```
+docs/specs/<slug>/issues/NNN-<slice-slug>.md
+```
+
+Where:
+
+- `NNN` is a zero-padded 3-digit number, starting from `001` if the directory is empty, otherwise `max(existing) + 1`. Scan `docs/specs/<slug>/issues/` for existing numbered files before assigning.
+- `<slice-slug>` is a short kebab-case slug derived from the title (e.g. `add-jwt-validation`, `handle-expired-tokens`).
+- Numbers reflect dependency order: blockers first, so `Blocked by` references can point to earlier numbers.
+
+Use the issue body template below. Create `docs/specs/<slug>/issues/` if it doesn't exist.
 
 <issue-template>
-## Parent
 
-A reference to the parent issue on the issue tracker (if the source was an existing issue, otherwise omit this section).
+# <NNN> — <Title>
+
+**Type:** HITL | AFK
+**Blocked by:** None | #001, #002
 
 ## What to build
 
-A concise description of this vertical slice. Describe the end-to-end behavior, not layer-by-layer implementation.
+A concise description of this vertical slice. Describe end-to-end behavior, not layer-by-layer implementation.
+
+## User stories covered
+
+- US-<n>: <short reference to the user story from PRD>
 
 ## Acceptance criteria
 
@@ -70,12 +92,24 @@ A concise description of this vertical slice. Describe the end-to-end behavior, 
 - [ ] Criterion 2
 - [ ] Criterion 3
 
-## Blocked by
+## Notes
 
-- A reference to the blocking ticket (if any)
-
-Or "None - can start immediately" if no blockers.
+Anything else relevant — prior art, related ADRs, gotchas. Omit if empty.
 
 </issue-template>
 
-Do NOT close or modify any parent issue.
+### 6. Report
+
+After writing all files, report to the user:
+
+```
+Wrote N issues to docs/specs/<slug>/issues/:
+  001-<slug>.md  (AFK, blockers: none)
+  002-<slug>.md  (AFK, blockers: #001)
+  003-<slug>.md  (HITL, blockers: #001)
+  ...
+
+Next: /to-ralph to convert these into Ralph loop artifacts.
+```
+
+Do NOT modify the PRD file. Do NOT re-number existing issue files.

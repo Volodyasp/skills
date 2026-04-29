@@ -1,29 +1,45 @@
 ---
 name: to-prd
-description: Turn the current conversation context into a PRD and publish it to the project issue tracker. Use when user wants to create a PRD from the current context.
+description: Turn the current conversation context into a PRD and write it to `docs/specs/<slug>/PRD.md`. Use when user wants to create a PRD from the current context for local spec-driven workflow.
 ---
 
-This skill takes the current conversation context and codebase understanding and produces a PRD. Do NOT interview the user — just synthesize what you already know.
+This skill takes the current conversation context and codebase understanding and produces a PRD as a local markdown file. Do NOT interview the user for the PRD body — synthesize what you already know from the conversation.
 
-The issue tracker and triage label vocabulary should have been provided to you — run `/setup-matt-pocock-skills` if not.
+The PRD lands in `docs/specs/<slug>/PRD.md`, where `<slug>` is a short story identifier the user provides. This is the input for `/to-issues` (decomposition) and downstream `/to-ralph` (Ralph loop runner).
 
 ## Process
 
-1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the PRD, and respect any ADRs in the area you're touching.
+### 1. Ask for the story slug
 
-2. Sketch out the major modules you will need to build or modify to complete the implementation. Actively look for opportunities to extract deep modules that can be tested in isolation.
+Before writing anything, ask the user for the **story slug**: a short kebab-case identifier for this PRD (e.g. `auth-token-refresh`, `vector-search-batching`, `telegram-onboarding-flow`).
 
-A deep module (as opposed to a shallow module) is one which encapsulates a lot of functionality in a simple, testable interface which rarely changes.
+Do not generate the slug from the PRD title yourself — auto-generated slugs tend to be vague ("implement-the-system"). Ask one direct question and accept what the user gives.
 
-Check with the user that these modules match their expectations. Check with the user which modules they want tests written for.
+If `docs/specs/<slug>/` already exists with a `PRD.md`, stop and ask the user whether to overwrite, pick a different slug, or extend the existing PRD.
 
-3. Write the PRD using the template below, then publish it to the project issue tracker. Apply the `needs-triage` triage label so it enters the normal triage flow.
+### 2. Explore the repo
+
+If you haven't already, explore the codebase to understand current state. Use the project's domain glossary throughout the PRD, and respect any ADRs in the area you're touching.
+
+### 3. Sketch deep modules
+
+Sketch the major modules you will need to build or modify. Actively look for opportunities to extract **deep modules** that can be tested in isolation.
+
+A deep module (as opposed to a shallow module) is one that encapsulates a lot of functionality behind a simple, testable interface that rarely changes.
+
+Check with the user that these modules match their expectations. Ask which modules they want tests written for.
+
+### 4. Write the PRD
+
+Create `docs/specs/<slug>/PRD.md` using the template below. Create the directory if it doesn't exist.
 
 <prd-template>
 
+# PRD: <Title>
+
 ## Problem Statement
 
-The problem that the user is facing, from the user's perspective.
+The problem the user is facing, from the user's perspective.
 
 ## Solution
 
@@ -31,44 +47,51 @@ The solution to the problem, from the user's perspective.
 
 ## User Stories
 
-A LONG, numbered list of user stories. Each user story should be in the format of:
+A LONG, numbered list of user stories in the format:
 
-1. As an <actor>, I want a <feature>, so that <benefit>
+1. As an <actor>, I want <feature>, so that <benefit>.
 
 <user-story-example>
-1. As a mobile bank customer, I want to see balance on my accounts, so that I can make better informed decisions about my spending
+1. As a mobile bank customer, I want to see balance on my accounts, so that I can make better informed decisions about my spending.
 </user-story-example>
 
-This list of user stories should be extremely extensive and cover all aspects of the feature.
+The list should be extensive and cover all aspects of the feature.
 
 ## Implementation Decisions
 
-A list of implementation decisions that were made. This can include:
+A list of implementation decisions. May include:
 
 - The modules that will be built/modified
-- The interfaces of those modules that will be modified
+- The interfaces of those modules
 - Technical clarifications from the developer
 - Architectural decisions
 - Schema changes
 - API contracts
 - Specific interactions
 
-Do NOT include specific file paths or code snippets. They may end up being outdated very quickly.
+Do NOT include specific file paths or code snippets — they go stale fast.
 
 ## Testing Decisions
 
-A list of testing decisions that were made. Include:
-
-- A description of what makes a good test (only test external behavior, not implementation details)
+- What makes a good test here (only test external behavior, not implementation details)
 - Which modules will be tested
-- Prior art for the tests (i.e. similar types of tests in the codebase)
+- Prior art for the tests (similar tests in the codebase)
 
 ## Out of Scope
 
-A description of the things that are out of scope for this PRD.
+What is explicitly out of scope for this PRD.
 
 ## Further Notes
 
-Any further notes about the feature.
+Anything else worth recording.
 
 </prd-template>
+
+### 5. Report
+
+After writing the file, report the absolute path to the user and suggest the next step:
+
+```
+PRD written to: docs/specs/<slug>/PRD.md
+Next: /to-issues to break this into vertical slices.
+```
