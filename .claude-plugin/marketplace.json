@@ -1,0 +1,19 @@
+{
+  "name": "skills",
+  "metadata": {
+    "description": "Vladimir Suponin's curated Claude Code skills for AI/RAG/FastAPI work"
+  },
+  "owner": {
+    "name": "Vladimir Suponin",
+    "email": "suponin.vldmr@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "skills",
+      "description": "Curated Claude Code skills: grill-me, tdd, to-prd, to-issues, diagnose, zoom-out, improve-codebase-architecture",
+      "category": "development",
+      "source": "./plugins/skills",
+      "homepage": "https://github.com/Volodyasp/skills"
+    }
+  ]
+}
