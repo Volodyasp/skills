@@ -104,7 +104,7 @@ One commit per red-green-refactor cycle. Squash RED + GREEN + (optional refactor
 
 Format depends on whether you're working inside the spec pipeline:
 
-- **Inside the pipeline** (`/to-issues` produced numbered issues under `docs/specs/<slug>/issues/NNN-*.md`):
+- **Inside the pipeline** (`/to-slices` produced numbered slices under `docs/specs/<slug>/slices/NNN-*.md`):
   - **1 slice in flight** → `<description>` (no prefix). Example: `add price calculation for tiered discounts`
   - **2+ slices in flight** → `Slice N: <description>` where N matches the slice's NNN prefix (strip leading zeros). Example: `Slice 1: add price calculation for tiered discounts`
 - **Outside the pipeline** (one-off bug fix, exploration, refactor work without a spec) → plain `<description>` is fine.

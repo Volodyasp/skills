@@ -1,13 +1,13 @@
 ---
-name: to-issues
-description: Break a PRD or plan into independently-grabbable vertical-slice issues as local markdown files under `docs/specs/<slug>/issues/`. Use when user wants to convert a PRD into implementation tickets for local spec-driven workflow.
+name: to-slices
+description: Break a PRD or plan into independently-grabbable vertical-slice tickets as local markdown files under `docs/specs/<slug>/slices/`. Use when user wants to decompose a PRD into vertical slices, tracer-bullet tickets, or implementation work units for local spec-driven workflow.
 ---
 
-# To Issues
+# To Slices
 
-Break a plan into independently-grabbable issues using **vertical slices** (tracer bullets). Each slice becomes a numbered markdown file under `docs/specs/<slug>/issues/`.
+Break a plan into independently-grabbable tickets using **vertical slices** (tracer bullets). Each slice becomes a numbered markdown file under `docs/specs/<slug>/slices/`.
 
-This is the second step of the local spec pipeline: `/to-prd → /to-issues → /to-ralph`.
+This is the second step of the local spec pipeline: `/to-prd → /to-slices → /to-ralph`.
 
 ## Process
 
@@ -23,11 +23,11 @@ Read the PRD fully. If the PRD references prior context not in your conversation
 
 ### 2. Explore the codebase (optional)
 
-If you have not already explored the codebase, do so. Issue titles and descriptions should use the project's domain glossary, and respect ADRs in the area being touched.
+If you have not already explored the codebase, do so. Slice titles and descriptions should use the project's domain glossary, and respect ADRs in the area being touched.
 
 ### 3. Draft vertical slices
 
-Break the plan into **tracer bullet** issues. Each issue is a thin vertical slice that cuts through ALL integration layers end-to-end, NOT a horizontal slice of one layer.
+Break the plan into **tracer bullet** slices. Each slice is a thin vertical cut through ALL integration layers end-to-end, NOT a horizontal slice of one layer.
 
 Slices may be **HITL** (Human-In-The-Loop) or **AFK** (Away-From-Keyboard). HITL slices require human interaction such as an architectural decision or design review. AFK slices can be implemented and merged without human interaction. Prefer AFK over HITL where possible.
 
@@ -55,23 +55,23 @@ Ask the user:
 
 Iterate until the user approves the breakdown.
 
-### 5. Write the issue files
+### 5. Write the slice files
 
 For each approved slice, create one markdown file at:
 
 ```
-docs/specs/<slug>/issues/NNN-<slice-slug>.md
+docs/specs/<slug>/slices/NNN-<slice-slug>.md
 ```
 
 Where:
 
-- `NNN` is a zero-padded 3-digit number, starting from `001` if the directory is empty, otherwise `max(existing) + 1`. Scan `docs/specs/<slug>/issues/` for existing numbered files before assigning.
+- `NNN` is a zero-padded 3-digit number, starting from `001` if the directory is empty, otherwise `max(existing) + 1`. Scan `docs/specs/<slug>/slices/` for existing numbered files before assigning.
 - `<slice-slug>` is a short kebab-case slug derived from the title (e.g. `add-jwt-validation`, `handle-expired-tokens`).
 - Numbers reflect dependency order: blockers first, so `Blocked by` references can point to earlier numbers.
 
-Use the issue body template below. Create `docs/specs/<slug>/issues/` if it doesn't exist.
+Use the slice body template below. Create `docs/specs/<slug>/slices/` if it doesn't exist.
 
-<issue-template>
+<slice-template>
 
 # <NNN> — <Title>
 
@@ -96,14 +96,14 @@ A concise description of this vertical slice. Describe end-to-end behavior, not 
 
 Anything else relevant — prior art, related ADRs, gotchas. Omit if empty.
 
-</issue-template>
+</slice-template>
 
 ### 6. Report
 
 After writing all files, report to the user:
 
 ```
-Wrote N issues to docs/specs/<slug>/issues/:
+Wrote N slices to docs/specs/<slug>/slices/:
   001-<slug>.md  (AFK, blockers: none)
   002-<slug>.md  (AFK, blockers: #001)
   003-<slug>.md  (HITL, blockers: #001)
@@ -112,4 +112,4 @@ Wrote N issues to docs/specs/<slug>/issues/:
 Next: /to-ralph to convert these into Ralph loop artifacts.
 ```
 
-Do NOT modify the PRD file. Do NOT re-number existing issue files.
+Do NOT modify the PRD file. Do NOT re-number existing slice files.

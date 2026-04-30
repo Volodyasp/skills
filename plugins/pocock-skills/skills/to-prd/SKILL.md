@@ -5,7 +5,7 @@ description: Turn the current conversation context into a PRD and write it to `d
 
 This skill takes the current conversation context and codebase understanding and produces a PRD as a local markdown file. Do NOT interview the user for the PRD body — synthesize what you already know from the conversation.
 
-The PRD lands in `docs/specs/<slug>/PRD.md`, where `<slug>` is a short story identifier the user provides. This is the input for `/to-issues` (decomposition) and downstream `/to-ralph` (Ralph loop runner).
+The PRD lands in `docs/specs/<slug>/PRD.md`, where `<slug>` is a short story identifier the user provides. This is the input for `/to-slices` (decomposition) and downstream `/to-ralph` (Ralph loop runner).
 
 ## Process
 
@@ -93,5 +93,5 @@ After writing the file, report the absolute path to the user and suggest the nex
 
 ```
 PRD written to: docs/specs/<slug>/PRD.md
-Next: /to-issues to break this into vertical slices.
+Next: /to-slices to break this into vertical slices.
 ```
