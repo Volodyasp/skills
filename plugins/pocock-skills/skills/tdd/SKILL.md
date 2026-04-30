@@ -98,6 +98,25 @@ After all tests pass, look for [refactor candidates](refactoring.md):
 
 **Never refactor while RED.** Get to GREEN first.
 
+## Commit format
+
+One commit per red-green-refactor cycle. Squash RED + GREEN + (optional refactor) into a single commit — the unit of work is "added behavior X", not "wrote test for X".
+
+Format depends on whether you're working inside the spec pipeline:
+
+- **Inside the pipeline** (`/to-issues` produced numbered issues under `docs/specs/<slug>/issues/NNN-*.md`):
+  - **1 slice in flight** → `<description>` (no prefix). Example: `add price calculation for tiered discounts`
+  - **2+ slices in flight** → `Slice N: <description>` where N matches the slice's NNN prefix (strip leading zeros). Example: `Slice 1: add price calculation for tiered discounts`
+- **Outside the pipeline** (one-off bug fix, exploration, refactor work without a spec) → plain `<description>` is fine.
+
+Description rules:
+
+- Imperative mood, lowercase (`add ...`, not `Added ...` or `ADDS ...`)
+- Describes the behavior, not the activity (`add tiered discount calculation`, not `test+impl tiered discount` or `TDD round 3`)
+- One concrete thing per commit — if you find yourself writing "and", split the cycle
+
+Why this format: cherry-pick by `^Slice N:` extracts a slice's commits onto a fresh branch for PR. The same format applies whether commits were authored by a human or by Ralph during an autonomous run. See `/to-ralph` for the pipeline-side enforcement.
+
 ## Checklist Per Cycle
 
 ```

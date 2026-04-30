@@ -1,6 +1,6 @@
 {
   "name": "pocock-skills",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Curated subset of mattpocock/skills with local-markdown adaptations. Pipeline: grill-me → to-prd → to-issues writes to docs/specs/<slug>/. Plus tdd, diagnose, zoom-out, improve-codebase-architecture.",
   "author": {
     "name": "Vladimir Suponin",
