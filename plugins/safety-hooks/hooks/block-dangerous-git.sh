@@ -3,8 +3,15 @@
 #
 # Blocks destructive / hook-bypassing git commands. Per-project whitelist via
 # .claude/safety-hooks.local.md (YAML frontmatter, "allow" key with list of
-# patterns to exempt). Read by every Bash tool call so whitelist edits take
+# patterns to exempt). Read on every Bash tool call so whitelist edits take
 # effect immediately, no restart needed.
+#
+# Whitelist lookup walks two locations in order:
+#   1. If the command starts with `cd <path> && ...` (the common Claude Code
+#      compound pattern), use <path>/.claude/safety-hooks.local.md.
+#   2. Otherwise, $(pwd)/.claude/safety-hooks.local.md.
+# This handles the typical case where a project repo lives outside CWD but
+# the user wants exceptions scoped to that repo.
 
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command')
@@ -22,15 +29,18 @@ DANGEROUS_PATTERNS=(
   "--no-verify"
 )
 
-# Read allow list from .claude/safety-hooks.local.md frontmatter, if it exists.
-# Format:
-# ---
-# allow:
-#   - "git push"
-#   - "--no-verify"
-# ---
-# Anything outside the frontmatter (markdown notes) is ignored.
-ALLOW_FILE=".claude/safety-hooks.local.md"
+# Determine working dir for whitelist lookup. Default to CWD; if the command
+# leads with `cd <path>` (followed by &&, ;, or end-of-line), prefer that path.
+WORK_DIR="$(pwd)"
+CD_TARGET=$(echo "$COMMAND" | sed -nE 's|^[[:space:]]*cd[[:space:]]+([^[:space:];&|]+).*|\1|p' | head -1)
+if [ -n "$CD_TARGET" ]; then
+  CD_TARGET="${CD_TARGET/#\~/$HOME}"
+  if [ -d "$CD_TARGET" ]; then
+    WORK_DIR="$CD_TARGET"
+  fi
+fi
+ALLOW_FILE="$WORK_DIR/.claude/safety-hooks.local.md"
+
 allowed_pattern() {
   local pattern="$1"
   [ -f "$ALLOW_FILE" ] || return 1

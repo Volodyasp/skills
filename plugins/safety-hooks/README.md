@@ -25,6 +25,15 @@ This repo allows push because we deploy here daily.
 - Whitelist edits take effect immediately (read on every Bash tool call). No restart required.
 - Malformed config falls back to blocking — the hook fails closed, so a typo can't accidentally disable safety.
 
+### Whitelist lookup paths
+
+The hook checks two locations in order:
+
+1. **`<cd-target>/.claude/safety-hooks.local.md`** — if the bash command starts with `cd <path> && ...` (Claude Code's common compound pattern), the cd target is used as the lookup root. This is the typical case for working with a project repo from a different CWD.
+2. **`$(pwd)/.claude/safety-hooks.local.md`** — fallback when there is no leading `cd`.
+
+This means a project's whitelist file at the repo root works whether the bash command is run from inside the repo or via `cd <repo> && ...` from elsewhere.
+
 This file should typically be **committed**, so the whitelist is auditable in `git diff` and travels with the repo.
 
 `file-guard.py` does not currently honor this whitelist — its escape hatches (`.env.example`, etc.) are hardcoded inside the script.
