@@ -22,6 +22,7 @@ Most skills here are forks from [mattpocock/skills](https://github.com/mattpococ
 | Plugin | Description |
 |---|---|
 | [`pocock-skills`](./plugins/pocock-skills/) | Curated subset of [mattpocock/skills](https://github.com/mattpocock/skills) with local-markdown adaptations. Spec-driven engineering pipeline: `grill-me → to-prd → to-issues`, plus `tdd`, `diagnose`, `zoom-out`, `improve-codebase-architecture`. |
+| [`safety-hooks`](./plugins/safety-hooks/) | `PreToolUse` hooks that block destructive git commands (`push`, `--force`, `reset --hard`, `--no-verify`, etc.) and access to secret files. Per-project whitelist via `.claude/safety-hooks.local.md`. |
 
 More plugins to come (personal authored skills, additional curated forks).
 
@@ -37,6 +38,7 @@ Then install the plugins you want:
 
 ```bash
 claude plugin install pocock-skills@skills
+claude plugin install safety-hooks@skills
 ```
 
 Restart Claude Code after install.

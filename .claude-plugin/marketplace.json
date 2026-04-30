@@ -1,7 +1,7 @@
 {
   "name": "skills",
   "metadata": {
-    "description": "Vladimir Suponin's Claude Code skills marketplace — curated forks and personal authored skills"
+    "description": "Vladimir Suponin's Claude Code marketplace — curated skill forks, authored skills, and safety hooks"
   },
   "owner": {
     "name": "Vladimir Suponin",
@@ -13,6 +13,13 @@
       "description": "Curated subset of mattpocock/skills with local-markdown adaptations: grill-me, tdd, to-prd, to-issues, diagnose, zoom-out, improve-codebase-architecture",
       "category": "development",
       "source": "./plugins/pocock-skills",
+      "homepage": "https://github.com/Volodyasp/skills"
+    },
+    {
+      "name": "safety-hooks",
+      "description": "Block dangerous git commands and access to secret files. Per-project whitelist via .claude/safety-hooks.local.md.",
+      "category": "safety",
+      "source": "./plugins/safety-hooks",
       "homepage": "https://github.com/Volodyasp/skills"
     }
   ]

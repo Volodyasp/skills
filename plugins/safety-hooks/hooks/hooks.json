@@ -1,0 +1,25 @@
+{
+  "description": "Block dangerous git commands and access to secret files. Per-project whitelist supported via .claude/safety-hooks.local.md.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/block-dangerous-git.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Edit|Write|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/file-guard.py"
+          }
+        ]
+      }
+    ]
+  }
+}

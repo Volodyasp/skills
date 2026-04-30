@@ -1,0 +1,21 @@
+# Local lint/format config for ~/.claude/hooks/.
+# Mirrors the rule set used by the PostToolUse hooks in settings.json so
+# `ruff check .` and `ruff format .` here match what runs on save.
+#
+# Test commands:
+#   uv run --with pytest python -m pytest tests/ -v
+#   ruff check . && ruff format --check . && mypy .
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["F", "B", "E9", "E71", "S", "ASYNC", "DTZ", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests legitimately use assert, subprocess on known-good scripts, and synthetic /tmp paths.
+"tests/**" = ["S101", "S603", "S607", "S108"]
+
+[tool.mypy]
+ignore_missing_imports = true
+follow_imports = "silent"

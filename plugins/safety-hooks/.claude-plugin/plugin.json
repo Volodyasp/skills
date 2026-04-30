@@ -1,0 +1,18 @@
+{
+  "name": "safety-hooks",
+  "version": "0.1.0",
+  "description": "Safety nets for AI-assisted development. Blocks dangerous git commands (push, force, reset --hard, --no-verify, etc.) and access to secret files (.env and friends). Per-project whitelist via .claude/safety-hooks.local.md.",
+  "author": {
+    "name": "Vladimir Suponin",
+    "email": "suponin.vldmr@gmail.com"
+  },
+  "homepage": "https://github.com/Volodyasp/skills",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "hooks",
+    "safety",
+    "git",
+    "secrets"
+  ]
+}
