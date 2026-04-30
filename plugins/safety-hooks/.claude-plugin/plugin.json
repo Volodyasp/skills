@@ -1,7 +1,7 @@
 {
   "name": "safety-hooks",
-  "version": "0.2.0",
-  "description": "Safety nets for AI-assisted development. Blocks dangerous git commands (push, force, reset --hard, --no-verify, etc.) and access to secret files (.env and friends). Per-project whitelist via .claude/safety-hooks.local.md.",
+  "version": "0.3.0",
+  "description": "Safety nets for AI-assisted development. Blocks dangerous git commands (push, force, reset --hard, --no-verify, etc.) and access to secret files (.env and friends). Per-project whitelist via .claude/safety-hooks.local.md with walk-up lookup, cd-target and `git -C` awareness.",
   "author": {
     "name": "Vladimir Suponin",
     "email": "suponin.vldmr@gmail.com"

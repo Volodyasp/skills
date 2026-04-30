@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-FILE_GUARD = Path(__file__).resolve().parent.parent / "file-guard.py"
+FILE_GUARD = Path(__file__).resolve().parent.parent / "hooks" / "file-guard.py"
 
 
 def _load_module():

@@ -21,22 +21,38 @@ This repo allows push because we deploy here daily.
 ```
 
 - Default behavior is **strict**: if the file is missing, all dangerous patterns are blocked.
+- Patterns are matched as **literal substrings** (`grep -F`). No regex — the entries you write are exactly what's compared. Case-sensitive.
 - Patterns must match the literal entries in `DANGEROUS_PATTERNS` inside `block-dangerous-git.sh`.
 - Whitelist edits take effect immediately (read on every Bash tool call). No restart required.
 - Malformed config falls back to blocking — the hook fails closed, so a typo can't accidentally disable safety.
 
-### Whitelist lookup paths
+### Pattern overlap
 
-The hook checks two locations in order:
+A single command can trigger MULTIPLE entries in `DANGEROUS_PATTERNS` — e.g. `git push --force` matches both `"git push"` and `"push --force"`. To allow such a command you must whitelist **all** patterns it triggers; whitelisting just one isn't enough. Same applies to `git reset --hard` (triggers `"git reset --hard"` and `"reset --hard"`).
 
-1. **`<cd-target>/.claude/safety-hooks.local.md`** — if the bash command starts with `cd <path> && ...` (Claude Code's common compound pattern), the cd target is used as the lookup root. This is the typical case for working with a project repo from a different CWD.
-2. **`$(pwd)/.claude/safety-hooks.local.md`** — fallback when there is no leading `cd`.
+This is intentional: defense-in-depth means we'd rather over-block than silently let force-push slip through because the user only listed `"git push"`.
 
-This means a project's whitelist file at the repo root works whether the bash command is run from inside the repo or via `cd <repo> && ...` from elsewhere.
+### Whitelist lookup
 
-This file should typically be **committed**, so the whitelist is auditable in `git diff` and travels with the repo.
+The hook resolves a starting directory, then **walks UP** to the filesystem root looking for `.claude/safety-hooks.local.md` — same way git itself finds `.git/` from anywhere inside the tree.
+
+Starting directory is chosen in priority order:
+
+1. **`git -C <path> ...`** — explicit git working directory.
+2. **`cd <path> && ...`** — Claude Code's common compound pattern when working on a repo from a different CWD.
+3. **`$(pwd)`** — fallback.
+
+Walk-up means a single whitelist at the repo root applies whether the command runs from inside the repo, a subdirectory, or via `cd`/`-C` from elsewhere. The deepest matching whitelist wins (a subdirectory can override its parent).
+
+The whitelist file should typically be **committed**, so policy is auditable in `git diff` and travels with the repo.
 
 `file-guard.py` does not currently honor this whitelist — its escape hatches (`.env.example`, etc.) are hardcoded inside the script.
+
+### Known limitations
+
+- **Paths with spaces**: the hook parses `cd <path>` and `git -C <path>` with regex that stops at whitespace. `cd "/path with spaces" && ...` is not parsed as a single token; the whitelist lookup falls back to `$(pwd)`. Workaround: invoke the command from inside the spaced directory rather than via `cd`/`-C`.
+- **Inline YAML comments after a pattern**: `- "git push"  # comment` is treated as a literal pattern with the comment included; it won't exempt. Put comments on their own line (outside frontmatter or as a separate `# Notes` section).
+- **Malformed payload**: if the Bash tool input is missing `command` or stdin isn't valid JSON, the hook fails closed (exits 2) rather than passing through. Bash tool calls always carry `command`, so this is only an issue with experimental clients.
 
 ## Configuration
 
@@ -47,10 +63,13 @@ Edit `file-guard.py` `PROTECTED_PATTERNS` / `ALLOWED_PATTERNS` / `DANGEROUS_BASH
 
 ```bash
 cd plugins/safety-hooks
-uv run pytest tests/
+uv run --with pytest python -m pytest tests/ -v
 ```
 
-`test_file_guard.py` covers the Python hook. The bash hook is tested via the integration script in the repo CI (or manually via `/tmp/test-safety-hook.sh` during development).
+- `tests/test_file_guard.py` — covers the Python hook (path matching, symlink resolution, Bash exfil patterns, fail-open behavior).
+- `tests/test_block_dangerous_git.py` — covers the bash hook (every dangerous pattern, whitelist exemption, `cd <path>` / `git -C <path>` lookup, walk-up to parent directories, malformed-config fail-closed, malformed-stdin fail-open).
+
+Both hook scripts run as subprocesses with synthetic PreToolUse JSON on stdin, matching the real Claude Code contract.
 
 ## Install
 
