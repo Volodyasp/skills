@@ -1,0 +1,19 @@
+{
+  "name": "python-quality-hooks",
+  "version": "0.1.0",
+  "description": "PostToolUse hooks for Python files. On Edit: ruff bugs-only check + mypy. On Write: ruff isort fix + ruff format, then the same checks. Non-blocking — feedback only.",
+  "author": {
+    "name": "Vladimir Suponin",
+    "email": "suponin.vldmr@gmail.com"
+  },
+  "homepage": "https://github.com/Volodyasp/skills",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "hooks",
+    "python",
+    "ruff",
+    "mypy",
+    "lint"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "description": "Python quality hooks. PostToolUse on Edit runs ruff bugs-only + mypy. PostToolUse on Write runs ruff isort-fix + format, then bugs-only + mypy.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-python-edit.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-python-write.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

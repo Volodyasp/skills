@@ -21,6 +21,13 @@
       "category": "safety",
       "source": "./plugins/safety-hooks",
       "homepage": "https://github.com/Volodyasp/skills"
+    },
+    {
+      "name": "python-quality-hooks",
+      "description": "PostToolUse hooks for Python: ruff bugs-only check + mypy on Edit; ruff isort-fix + format + same checks on Write. Non-blocking.",
+      "category": "development",
+      "source": "./plugins/python-quality-hooks",
+      "homepage": "https://github.com/Volodyasp/skills"
     }
   ]
 }
