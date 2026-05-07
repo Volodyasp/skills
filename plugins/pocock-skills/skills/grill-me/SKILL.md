@@ -9,15 +9,4 @@ Ask the questions one at a time.
 
 If a question can be answered by exploring the codebase, explore the codebase instead.
 
-## When the interview is complete
-
-STOP. Do **not** automatically generate a PRD, write code, run `/to-prd`, or proceed to any next step.
-
-1. Summarise the agreed decisions briefly (5–10 bullets max).
-2. Ask the user explicitly what to do next. Offer concrete options, e.g.:
-   - Run `/to-prd` to write the spec to `docs/specs/<slug>/PRD.md`
-   - Continue grilling on a sub-area you flagged
-   - Pause and save the summary somewhere
-   - Something else
-
-Wait for the user's choice before doing anything further. Even if the next step seems obvious, the user wants the explicit handoff.
+After the last branch is resolved, ask about the next steps. Don't jump to coding automatically.
