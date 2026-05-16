@@ -11,6 +11,14 @@ Final step of the local spec pipeline: `/to-prd → /to-slices → /run-slices �
 
 This skill finishes a *story*, not a slice. Per-slice acceptance is `check-before-done` + `slice-review`, already done inside `run-slices`. Here the unit of work is the whole branch.
 
+## Autonomous mode
+
+If invoked with `autonomous` (or `afk`) among its arguments — usually because `run-slices` ran autonomously and is closing out the story — do not pause for the step 5 delivery choice. Run steps 1–4 as normal, then take the **non-outward-facing** default: keep the branch as-is, present the assembled PR body together with the exact push / PR commands, and stop with a report.
+
+Never `git push` or open a PR in autonomous mode — that is an outward-facing action and stays an explicit human decision. An autonomous run leaves the branch verified and delivery-ready; the human runs the final push.
+
+Stop and report — never work around it — on any genuine blocker: a dirty tree (step 1), red verification (step 2), or a missing acceptance report. A blocker is a real stop, not a pause for permission; everything else runs straight through, with no "should I continue?" check-ins.
+
 ## 1. Confirm preconditions
 
 - The current branch is the story branch — never `main` / `master`.
@@ -53,7 +61,7 @@ Present it. Offer to save it to a temp file (`mktemp`) so it can be passed to `g
 
 ## 5. Offer delivery options
 
-Ask the user to choose:
+In autonomous mode, skip this question — take option 2 (keep the branch as-is), present the step 4 PR body together with option 1's exact push / PR commands, and stop with a report (see *Autonomous mode* above). Otherwise, ask the user to choose:
 
 1. **Push and open a PR** — give the exact commands: `git push -u origin <branch>` and `gh pr create --base <base> --title "<title>" --body-file <file>`. If a safety hook blocks `git push`, hand the commands to the user to run with the `!` prefix; do not retry the push yourself.
 2. **Keep the branch as-is** — report the branch name and stop.

@@ -25,7 +25,7 @@ Note each slice's `Type` (HITL / AFK). Create a TodoWrite with one item per slic
 
 ## 2. Ask the execution mode
 
-Ask the user, once:
+If this skill was invoked with `autonomous` (or `afk`) among its arguments, skip this question — use **Autonomous** mode directly, do not ask. Otherwise ask the user, once:
 
 - **Step-by-step** — run one slice, then stop and report; continue on the user's go-ahead. Maximum control.
 - **Autonomous** — run every slice back-to-back; pause only at a HITL slice, or when a gate, a fix, or a sub-agent escalates (a blocker, a dispute, or a gate that stops making progress). Hands-off.
@@ -151,7 +151,7 @@ Step-by-step: stop here and report; continue on the user's go-ahead. Autonomous:
 
 ## 5. After all slices
 
-Invoke the **`finish-slices`** skill. Give it the session's slice acceptance report if available. It runs final verification on the whole story branch, summarises what shipped with slice commit ranges, assembles a PR body, and offers the delivery options (push and open a PR, keep the branch, heavyweight review, stop).
+Invoke the **`finish-slices`** skill. Give it the session's slice acceptance report if available. It runs final verification on the whole story branch, summarises what shipped with slice commit ranges, assembles a PR body, and offers the delivery options (push and open a PR, keep the branch, heavyweight review, stop). In Autonomous mode, invoke `finish-slices` with `autonomous` too, so the story closes out without stalling on its delivery question.
 
 ## Implementer status
 
