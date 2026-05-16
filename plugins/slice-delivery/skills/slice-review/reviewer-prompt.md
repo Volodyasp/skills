@@ -7,7 +7,7 @@ Task tool:
   description: "Review slice {SLICE_ID}: {SLICE_TITLE}"
   prompt: |
     You are doing a light code-quality review for one verified slice.
-    The verifier already checked functional completion. Your job is code quality,
+    The verifier already checked functional completion. Your job is code quality:
     bugs, maintainability, conventions, test quality, and scope control.
 
     ## Inputs
@@ -30,52 +30,34 @@ Task tool:
     ## Review Rules
 
     - Read the diff range. Do not review from the implementer's summary.
-    - Read the provided CLAUDE.md path(s), or explicitly state that none were provided/found.
+    - Read the provided CLAUDE.md path(s), or state that none were provided.
     - Do not rerun a heavyweight full-story review.
     - Do not ask for unrelated refactors or nice-to-haves.
-    - Flag scope creep: changed lines that do not trace to the slice spec.
 
     ## Check For
 
     - Bugs, missed edge cases, silent error swallowing.
     - Project convention violations from CLAUDE.md and surrounding code.
     - Debug prints, commented-out code, accidental TODOs.
-    - Scope creep outside the slice.
+    - Scope creep: changed lines that do not trace to the slice spec.
     - Tests that only test mocks, miss important behavior, or do not prove the slice.
 
-    ## Output Contract
+    ## How To Report
 
-    Your final response MUST end with exactly one machine-readable YAML block.
-    Do not put prose after the block. Use `null` or `[]` when a field is not applicable.
+    Report in prose, then end with one status line. In the prose include:
 
-    ```yaml
-    status: APPROVED # APPROVED | CHANGES_REQUESTED | BLOCKED
-    commit_sha: null # reviewed HEAD SHA string, or null
-    commands_run:
-      - command: "diff inspection"
-        exit_code: null # integer, or null if not a command
-        result: "what was inspected or run"
-    red_green_evidence:
-      status: NOT_APPLICABLE # PRESENT | MISSING | NOT_APPLICABLE
-      test_file: null # path string, or null
-      test_name: null # test name string, or null
-      red:
-        command: null # exact command string, or null
-        exit_code: null # integer, or null
-        failure_summary: null # expected failure summary string, or null
-      green:
-        command: null # exact command string, or null
-        exit_code: null # integer, or null
-        pass_summary: null # pass summary string, or null
-    issues: [] # issue objects; empty if APPROVED
-    fix_request: [] # concrete fix items, empty if APPROVED
-    ```
+    - Each command or inspection you used.
+    - Each issue on its own line as `Severity file:line — what is wrong and what to
+      change`, severity being Critical, Important, or Minor.
 
-    When reporting issues, each item in `issues` must include `severity`
-    (`Critical`, `Important`, or `Minor`), `file_line` (path:line string or
-    `null`), `problem`, and `fix`.
+    End with exactly this line and nothing after it:
 
-    Return APPROVED only when there are no Critical or Important issues and
-    `fix_request` is empty. Use `red_green_evidence.status: NOT_APPLICABLE` only
-    if test-first evidence was already validated by `check-before-done`.
+        Status: <STATUS> · Commit: <reviewed HEAD sha>
+
+    STATUS is one of: APPROVED, CHANGES_REQUESTED, BLOCKED.
+
+    - APPROVED — no Critical or Important issues. List any Minor remarks in the
+      prose; they do not block the slice.
+    - CHANGES_REQUESTED — at least one Critical or Important issue must be fixed.
+    - BLOCKED — the review cannot run: the diff, files, or context are missing.
 ```

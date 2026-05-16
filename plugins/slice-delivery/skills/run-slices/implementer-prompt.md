@@ -33,8 +33,10 @@ Task tool:
     ## Hard Rules
 
     - Work in the current checkout and branch. Do not create worktrees or branches.
-    - Use only the context above. If you need PRD details, another slice, or an architectural decision, ask.
-    - Do not edit or commit planning artifacts unless the project intentionally tracks them or you were explicitly told to update them.
+    - Use only the context above. If you need PRD details, another slice, or an
+      architectural decision, stop and ask — do not go reading other files.
+    - Do not edit or commit planning artifacts unless the project intentionally
+      tracks them or you were explicitly told to update them.
     - Implement exactly this slice. No nice-to-haves, no unrelated refactors.
     - Follow existing code style and CLAUDE.md project instructions.
 
@@ -46,58 +48,50 @@ Task tool:
     4. Run the targeted test and {TEST_COMMAND}.
     5. Refactor only while tests stay green.
 
-    If you cannot write a meaningful failing test, stop with NEEDS_CONTEXT or BLOCKED.
+    If you cannot write a meaningful failing test, stop and report NEEDS_CONTEXT
+    or BLOCKED — do not implement untested.
 
     ## Commit Requirement
 
-    Commit the slice on the current story branch using the provided commit format. If no format is provided, use a plain imperative message. The subject must describe the actual code/product change, not the slice machinery; avoid subjects like "slice done", "run-slices changes", or "address verifier".
+    Commit the slice on the current story branch using the provided commit format,
+    or a plain imperative message if none is given. The subject must describe the
+    actual code/product change, not the slice machinery — avoid "slice done",
+    "run-slices changes", "address verifier".
+
     Before reporting, confirm:
 
-    - `git status --short` is empty
-    - `git rev-parse HEAD` is the commit you made
-    - `git diff --stat {BASE_SHA}..HEAD` contains only intended implementation/test files, plus intentional tracked docs/spec changes if project policy allows them
+    - `git status --short` is empty.
+    - `git rev-parse HEAD` is the commit you made.
+    - `git diff --stat {BASE_SHA}..HEAD` contains only intended implementation and
+      test files.
 
     ## Self-Review
-
-    Before reporting, check:
 
     - Every acceptance criterion is addressed.
     - Tests exercise real behavior, not only mocks.
     - No debug prints, commented-out code, or stray TODOs.
     - No scope creep outside the slice.
 
-    ## Output Contract
+    ## How To Report
 
-    Your final response MUST end with exactly one machine-readable YAML block.
-    Do not put prose after the block. Use `null` or `[]` when a field is not applicable.
+    Report in prose, then end with one status line. In the prose include:
 
-    ```yaml
-    status: DONE # DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED
-    commit_sha: null # string SHA when committed, otherwise null
-    commands_run:
-      - command: "exact command"
-        exit_code: 0 # integer, or null if not run
-        result: "pass/fail/blocked summary"
-    red_green_evidence:
-      status: PRESENT # PRESENT | MISSING | NOT_APPLICABLE
-      test_file: null # path string, or null
-      test_name: null # test name string, or null
-      red:
-        command: null # exact command string, or null
-        exit_code: null # integer, or null
-        failure_summary: null # expected failure summary string, or null
-      green:
-        command: null # exact command string, or null
-        exit_code: null # integer, or null
-        pass_summary: null # pass summary string, or null
-    issues: [] # issue objects; empty for DONE with no concerns
-    fix_request: [] # concrete requests for the controller/fix agent
-    ```
+    - Each verification command you ran, with its exit code and pass/fail count.
+    - RED/GREEN evidence: the test file and name, the command that showed it fail
+      for the expected reason, then the command that showed it pass.
+    - Each acceptance criterion and how the code meets it.
+    - Any concern or issue, one per line as `Severity file:line — what is wrong`,
+      severity being Critical, Important, or Minor.
 
-    When reporting issues, each item in `issues` must include `severity`
-    (`Critical`, `Important`, or `Minor`), `file_line` (path:line string or
-    `null`), `problem`, and `fix`.
+    End with exactly this line and nothing after it:
 
-    For DONE, `commit_sha` must be non-null, `red_green_evidence.status` must be PRESENT,
-    `commands_run` must include the verification command, and `fix_request` must be empty.
+        Status: <STATUS> · Commit: <sha or none>
+
+    STATUS is one of: DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED.
+
+    - DONE — committed, RED/GREEN shown, verification command run and green.
+    - DONE_WITH_CONCERNS — committed, but you have a correctness or scope doubt;
+      state it in the prose.
+    - NEEDS_CONTEXT — you need information that was not provided.
+    - BLOCKED — you cannot complete the slice; explain why.
 ```

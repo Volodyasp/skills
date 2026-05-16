@@ -14,13 +14,11 @@ Verify a unit of work is genuinely complete against evidence, not claims. Dispat
 - **Definition of done** — a slice's full spec plus `## Acceptance criteria`, or an explicit checklist.
 - **Work location** — the branch, repo path, and diff range to verify (for slices, usually `BASE_SHA..HEAD`).
 - **Verification commands** — test command, and any lint / build.
-- **Implementer/fix-agent result** — latest machine-readable YAML result, used to verify commit SHA and RED/GREEN evidence.
+- **Implementer/fix-agent report** — the latest sub-agent report, used to cross-check the commit and the RED/GREEN evidence.
 
 ## Process
 
-Dispatch a **fresh verification sub-agent**. It must not be the agent that did the work and must not inherit its context — construct exactly what it needs from all inputs above. Instruct it to:
-
-Use `verifier-prompt.md` in this skill directory as the dispatch template.
+Dispatch a **fresh verification sub-agent**. It must not be the agent that did the work and must not inherit its context — construct exactly what it needs from the inputs above. Use `verifier-prompt.md` in this skill directory as the dispatch template. Instruct it to:
 
 1. **Identify** the command that proves each item of the definition of done.
 2. **Run** every verification command freshly — never report from memory or a prior run.
@@ -31,22 +29,13 @@ Use `verifier-prompt.md` in this skill directory as the dispatch template.
 
 ## Result
 
-The verifier must return one status:
+The verifier reports in prose and ends with a status line — `Status: <PASS|FAIL|BLOCKED> · Commit: <sha>`:
 
 - **PASS** — every item is satisfied and fresh evidence is shown.
-- **FAIL** — at least one item fails or has no evidence.
+- **FAIL** — at least one item fails or has no evidence. The prose names each failed item with `file:line` and the reason.
 - **BLOCKED** — verification cannot run because context, commands, dependencies, or environment are missing.
 
-Required report fields:
-
-- `status`: `PASS`, `FAIL`, or `BLOCKED`
-- `commit_sha`: HEAD SHA verified, or `null`
-- `commands_run`: exact commands, exit codes, and pass/fail counts
-- `red_green_evidence`: TDD evidence copied/validated from implementer/fix-agent result, or marked missing/not applicable
-- `issues`: every failed definition-of-done item, missing evidence item, or blocker
-- `fix_request`: concrete items to return to the fix agent when status is `FAIL`
-
-If the verifier cannot produce this block, the result is BLOCKED.
+The prose must show the exact commands run with their exit codes and pass/fail counts. If the verifier cannot run the commands at all, the result is BLOCKED.
 
 ## Red flags — never
 
@@ -54,5 +43,4 @@ If the verifier cannot produce this block, the result is BLOCKED.
 - Report a prior run's output instead of a fresh one.
 - Pass an item that has no command output behind it.
 - Let the agent that did the work also verify it.
-- Return prose like "looks good" instead of the required status enum.
-- Omit any required top-level key from the machine-readable result.
+- Return prose like "looks good" instead of the `Status:` line.

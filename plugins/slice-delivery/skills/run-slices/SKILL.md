@@ -28,7 +28,7 @@ Note each slice's `Type` (HITL / AFK). Create a TodoWrite with one item per slic
 Ask the user, once:
 
 - **Step-by-step** — run one slice, then stop and report; continue on the user's go-ahead. Maximum control.
-- **Autonomous** — run every slice back-to-back; pause only at a HITL slice, or on a failure that survives the retry budget. Hands-off.
+- **Autonomous** — run every slice back-to-back; pause only at a HITL slice, or when a gate, a fix, or a sub-agent escalates (a blocker, a dispute, or a gate that stops making progress). Hands-off.
 
 No parallel mode. Slices commonly touch overlapping files and later slices build on earlier ones. Both modes are sequential - one slice at a time. The mode controls only whether the loop pauses after a slice is accepted; the two gates always run for every slice in both modes.
 
@@ -36,24 +36,24 @@ No parallel mode. Slices commonly touch overlapping files and later slices build
 
 Confirm the current branch is the story branch. If not, ask the user. Never run a slice on `main` / `master`.
 
-**Exclude the state file first.** Before anything inspects the tree, make sure the resume state file is git-ignored: if `git check-ignore docs/specs/<slug>/.run-slices-state.md` does not already report it ignored, append that path to `.git/info/exclude` (per-clone, idempotent — never the shared `.gitignore`). This must run before the clean-tree check below — otherwise an existing state file reads as a dirty tree and stops the run.
+**Exclude the state file first.** Before anything inspects the tree, make sure the resume state file is git-ignored: if `git check-ignore docs/specs/<slug>/.run-slices-state.md` does not already report it ignored, append that path to `.git/info/exclude` (per-clone, idempotent — never the shared `.gitignore`). This must run before any clean-tree check — otherwise an existing state file reads as a dirty tree and stops the run.
 
-Before the first slice and before every later slice, run a clean working-tree check:
+Run a clean working-tree check before starting:
 
 ```bash
 git status --short
 git rev-parse --abbrev-ref HEAD
 ```
 
-If the working tree is dirty before starting a slice, stop and ask. Do not mix user changes or planning artifacts into slice commits.
+If the working tree is dirty, stop and ask. Do not mix user changes or planning artifacts into slice commits.
 
-**Resume an interrupted run.** `run-slices` tracks progress in one state file, `docs/specs/<slug>/.run-slices-state.md` (git-excluded — see the step above) — a table of the slices, each accepted one recording the commit it was accepted at. It lives on disk, never gets committed, and does not touch the slice files.
+**Resume an interrupted run.** `run-slices` tracks progress in one state file, `docs/specs/<slug>/.run-slices-state.md` (git-excluded — see above) — a table of the slices, each accepted one recording the commit it was accepted at. It lives on disk, never gets committed, and does not touch the slice files.
 
 - First run for a story: create the state file with one `pending` row per slice, in execution order — see *State file format* below.
-- State file already exists → a prior run was interrupted. Take the longest unbroken prefix of slices it marks accepted.
+- State file already exists → a prior run was interrupted. Take the longest unbroken prefix of slices it marks `accepted`.
 - Verify before trusting — the file is a hint, not proof: confirm each accepted slice's recorded commit is an ancestor of the current branch HEAD (`git merge-base --is-ancestor`), then run the project verification command once against HEAD — it must be green. A mismatch or a red suite → the state is stale; stop and report.
 - Branch HEAD equals the last accepted slice's recorded commit → resume at the next slice; mark the resumed-past slices complete in the TodoWrite.
-- Branch HEAD is ahead of it → an interrupted slice left commits behind. Stop and ask the user to reset the branch to that commit (redo the slice) or keep the commits — never `git reset` yourself.
+- Branch HEAD is ahead of it → an interrupted slice left commits behind. Resume needs the branch at a known-good accepted commit, so stop and ask the user to either reset the branch to that commit and let `run-slices` redo the slice, or keep the commits and finish that slice by hand — `run-slices` then resumes at the next slice once the user confirms the branch is good. Never `git reset` yourself.
 - Every slice already accepted → nothing to run; tell the user and suggest `/finish-slices`.
 - No state file, or no slice accepted → start at slice 1, as normal.
 
@@ -70,15 +70,15 @@ If the working tree is dirty before starting a slice, stop and ask. Do not mix u
 
 `status` is `accepted` or `pending`; a `pending` row has `-` for both SHAs. Write the columns exactly as named and in this order — a later session parses this file to resume, so the format is a contract, not freeform notes.
 
-**Commit style discovery.** Before dispatching the first implementer, infer the project's commit style from explicit instructions first (`CLAUDE.md`, `AGENTS.md`, user prompt), then from `git log --oneline -20`. Pass the discovered style and 2-3 representative examples as `Commit format`. If no clear style exists, use a short imperative subject. Never impose a slice-specific syntax by default. Commit subjects should describe the actual code/product change, not delivery machinery.
+**Commit style discovery.** Before dispatching the first implementer, infer the project's commit style from explicit instructions first (`CLAUDE.md`, `AGENTS.md`, user prompt), then from `git log --oneline -20`. Pass the discovered style and 2-3 representative examples as `Commit format`. If no clear style exists, use a short imperative subject. Never impose a slice-specific syntax by default. Commit subjects describe the actual code/product change, not delivery machinery.
 
 ## 4. Per-slice loop
 
-For each slice, in execution order:
+For each slice, in execution order.
 
 ### 4a. Implement (sub-agent)
 
-Record the slice base:
+Run the clean working-tree check first — `git status --short` must be empty. A dirty tree mid-run means uncommitted work; stop and ask. Then record the slice base:
 
 ```bash
 BASE_SHA=$(git rev-parse HEAD)
@@ -86,28 +86,11 @@ BASE_SHA=$(git rev-parse HEAD)
 
 Spawn a fresh implementer sub-agent in the current story-branch checkout. Do not create a worktree. Do not reuse the previous slice's implementer.
 
-Use `implementer-prompt.md` in this skill directory as the dispatch template.
+Dispatch it with `implementer-prompt.md` in this skill directory — fill every field in its `## Inputs` block. A sub-agent starts with zero session history; it gets exactly what you hand it, so construct its context yourself: the full slice spec, the project commands, the branch and `BASE_SHA`, the commit format, and any interfaces or decisions from already-accepted slices it needs. Do not just point it at the slice file.
 
-Construct its context - do not just point it at the slice file. Give it:
+The implementer follows TDD — failing test, confirm it fails, minimal implementation, verify, refactor green, commit — and reports in prose ending with a `Status:` line.
 
-- The full slice spec, including `## What to build` and `## Acceptance criteria`.
-- The project test command and any lint/build commands known from CLAUDE.md.
-- The current branch name and `BASE_SHA`.
-- Any interfaces or decisions from already-accepted slices it needs.
-
-A sub-agent starts with zero session history; it gets exactly what you hand it.
-
-The implementer must follow TDD:
-
-1. Write a failing test for the slice behavior.
-2. Run the targeted test and confirm it fails for the expected reason.
-3. Write the minimal implementation.
-4. Run the targeted test and the project verification command.
-5. Refactor only while tests stay green.
-6. Commit the slice on the story branch using the project's commit format.
-7. Self-review, then return one status (see Implementer status), the commit SHA, commands run, and RED/GREEN evidence.
-
-After the implementer returns, verify commit integrity before any gate:
+After it returns, verify commit integrity before any gate:
 
 ```bash
 git status --short
@@ -115,50 +98,42 @@ git rev-list --count "$BASE_SHA"..HEAD
 git diff --stat "$BASE_SHA"..HEAD
 ```
 
-`git status --short` must be empty, `rev-list --count` must be at least 1, and the diff must not include planning artifacts unless the user or project explicitly tracks/updates them as part of delivery. If this fails, dispatch a fresh fix sub-agent on the same branch with the integrity failure and require a clean commit before continuing. Use `fix-agent-prompt.md` for fix dispatches.
+`git status --short` must be empty, `rev-list --count` must be at least 1, and the diff must not include planning artifacts unless the user or project explicitly tracks them. If this fails, run the **Fix loop** with the integrity failure as the gate feedback and require a clean commit before continuing.
 
-The implementer result must include the machine-readable YAML block from `implementer-prompt.md` with top-level keys: `status`, `commit_sha`, `commands_run`, `red_green_evidence`, `issues`, and `fix_request`. If the block is missing, malformed, or internally inconsistent, treat it as a protocol failure: re-dispatch a fresh implementer-role sub-agent with the instruction to return a valid YAML block only. Do not count protocol failures against code fix budgets.
+Then handle the implementer's `Status:` (see *Implementer status*). On `DONE` / `DONE_WITH_CONCERNS` proceed to 4b.
 
 ### 4b. Check before done
 
-Runs automatically for every slice, in both modes. Invoke the **`check-before-done`** skill. Give it the full slice spec, acceptance criteria, current branch, `BASE_SHA..HEAD` diff range, verification commands, and the latest implementer/fix-agent YAML result. It dispatches its own fresh verification sub-agent.
+Runs automatically for every slice, in both modes. Invoke the **`check-before-done`** skill. Give it the full slice spec and acceptance criteria, the current branch, the `BASE_SHA..HEAD` diff range, the verification commands, and the latest implementer/fix-agent report. It dispatches its own fresh verification sub-agent.
 
-Any item fails -> dispatch a fresh fix sub-agent on the same branch with the verifier's report, the slice spec, the current diff, and the fix-round number. Use `fix-agent-prompt.md`. The fix sub-agent applies the **`handle-review-feedback`** discipline: verify each item against the code, push back on wrong or out-of-scope items with evidence, fix one at a time. On the **second** consecutive failure of this gate it applies **`debug-slice-failure`** instead - root cause before any further patch.
-
-Handle the fix result. If the fix sub-agent returned `NEEDS_CONTEXT` or `BLOCKED`, do not treat it as a fix result — handle it as under *Implementer status* (supply the missing context and re-dispatch, or escalate to the user; never re-dispatch unchanged). For a `DONE` / `DONE_WITH_CONCERNS` result, confirm whether code changed — compare `git rev-parse HEAD` against HEAD before the dispatch; a committed fix means the fix-agent's `commit_sha` is a real new commit.
-
-- **Code changed** -> re-run `check-before-done`. The fresh re-run is the gate's independent verdict on the fix.
-- **Pushback only** (`status: DONE_WITH_CONCERNS`, no commit, HEAD unchanged) -> do not re-run the gate; nothing changed, so its verdict would be identical. The orchestrator resolves the dispute itself — never re-run the gate with the fix-agent's argument as context.
-
-Adjudicate every pushed-back item yourself — each is an `issues` entry carrying the fix-agent's `evidence`:
-
-- Convincing evidence -> the item is **resolved by pushback** against the current diff. It stays resolved while later fix rounds leave the files its evidence relied on untouched; if a later code change touches any of those files, re-adjudicate it against the new diff — the original evidence may no longer hold.
-- Unconvincing -> the item is still a **failed gate item**.
-- Pushback is legitimate only for judgement calls — a criterion read wrongly, a criterion marked unproven that the evidence does satisfy, a requirement outside the slice scope. A red test, a non-zero command, or a missing required command cannot be pushed back; that needs a code or test change. Treat such a pushback as unconvincing.
-- Uncertain -> stop and ask the user.
-
-The gate is satisfied when every failed item is either fixed (the re-run confirms it) or resolved by pushback. Otherwise continue the fix loop.
-
-Budget: 2 fix rounds — a pushback-only round counts. Still failing -> stop and report to the user.
-
-The verifier result must include the machine-readable YAML block from `verifier-prompt.md` with top-level keys: `status`, `commit_sha`, `commands_run`, `red_green_evidence`, `issues`, and `fix_request`. If the block is missing or malformed, treat it as a protocol failure: re-dispatch the verifier with the instruction to return a valid YAML block only. Do not send malformed verifier output to a fix-agent and do not count it against code fix budgets. A valid `status: FAIL` means the gate failed — enter the fix-result handling above. A valid `status: BLOCKED` means verification could not run (missing context, commands, dependencies, or environment) — do not dispatch a fix-agent; supply what the verifier reports as missing and re-run `check-before-done`, or escalate to the user.
+- `PASS` → go to 4c.
+- `FAIL` → run the **Fix loop** for this gate.
+- `BLOCKED` → verification could not run. Supply what the verifier reports as missing and re-invoke `check-before-done`, or escalate to the user. Do not run the Fix loop on a `BLOCKED` gate.
 
 ### 4c. Slice review
 
-Runs automatically for every slice, in both modes - only after 4b passes. Invoke the **`slice-review`** skill. Give it the `BASE_SHA..HEAD` diff, the full slice spec, current branch, repo root, and relevant CLAUDE.md path(s). It dispatches its own fresh code-review sub-agent.
+Runs automatically for every slice, in both modes - only after 4b passes. Invoke the **`slice-review`** skill. Give it the `BASE_SHA..HEAD` diff, the full slice spec, the current branch, the repo root, and the relevant CLAUDE.md path(s). It dispatches its own fresh code-review sub-agent.
 
-Issues -> dispatch a fresh fix sub-agent on the same branch with the review report, the slice spec, the current diff, and the fix-round number. Use `fix-agent-prompt.md`. The fix sub-agent applies the **`handle-review-feedback`** discipline: verify each review item, push back on out-of-scope or wrong comments with evidence instead of complying blindly. On the **second** consecutive failure of this gate it applies **`debug-slice-failure`** instead - root cause before any further patch.
+- `APPROVED` → go to 4d. If the reviewer noted Minor remarks, record them in the slice acceptance report; they do not block the slice.
+- `CHANGES_REQUESTED` → run the **Fix loop** for this gate. A review fix can break behaviour, so after any fix that changed code, re-run `check-before-done` before re-running `slice-review`; if that `check-before-done` re-run fails, run the Fix loop for `check-before-done` until it is green again, then return to `slice-review`.
+- `BLOCKED` → the review could not run. Supply what is missing and re-invoke `slice-review`, or escalate. Do not run the Fix loop on a `BLOCKED` gate.
 
-Handle the fix result the same way as 4b — first confirm whether code changed:
+### Fix loop
 
-- **Code changed** -> re-run `check-before-done` first (a review fix can break behaviour), then re-run `slice-review`.
-- **Pushback only** (`status: DONE_WITH_CONCERNS`, no commit, HEAD unchanged) -> do not re-run either gate. The orchestrator adjudicates the dispute itself.
+Used by 4a and the two gates when a check fails. Repair the slice until the check passes.
 
-Adjudicate every pushed-back review item yourself, the same way as 4b — each is an `issues` entry carrying the fix-agent's `evidence`. Convincing evidence -> **resolved by pushback** against the current diff; it stays resolved only while later fix rounds leave the files its evidence relied on untouched, and a later code change touching any of those files forces re-adjudication. Unconvincing -> still a **failed gate item**. Uncertain -> stop and ask the user. Code-quality feedback is judgement, so a pushback here can be legitimate — but a real bug the reviewer found is not a difference of opinion.
+1. Capture HEAD before the fix: `PRE_FIX=$(git rev-parse HEAD)`.
+2. Dispatch a fresh fix sub-agent with `fix-agent-prompt.md` — fill every field in its `## Inputs` block: the gate report, the slice spec, the `BASE_SHA..HEAD` diff, `PRE_FIX` as `Current HEAD`, the commit format, and whether any earlier fix attempt on this gate did not hold. It applies the **`handle-review-feedback`** discipline.
+3. Read the fix agent's `Status:`:
+   - `NEEDS_CONTEXT` / `BLOCKED` → handle as under *Implementer status*: supply the missing context and re-dispatch, or escalate to the user. Never re-dispatch unchanged. Do not continue to step 4.
+   - `DONE_WITH_CONCERNS` → the fix agent disputes a gate item. Escalate the dispute to the user with the agent's `file:line` evidence and settle it before continuing — never adjudicate it yourself, never loop on a disputed item. Then continue to step 4.
+   - `DONE` → continue to step 4.
+4. Did code change? Compare `git rev-parse HEAD` with `PRE_FIX`:
+   - **New commit** → confirm `git status --short` is empty, then re-run the gate — a fresh, independent verdict on the fix.
+   - **No new commit** → with a dispute, the gate verdict already stands while the user settles it; with neither a dispute nor a blocker, it is a protocol miss — re-dispatch once with explicit instructions.
+5. Gate passes → the gate is satisfied; leave the loop. Gate still fails → did this attempt make progress (a previously-failed item now resolved, or the failure genuinely narrower)? Yes → loop from step 1. No → stop and report to the user. Backstop: after 3 fix attempts on one gate without it passing, stop and report regardless.
 
-The gate is satisfied when every review item is either fixed (the re-runs confirm it) or resolved by pushback. Budget: 2 rounds — a pushback-only round counts. Still failing -> stop and report to the user.
-
-The reviewer result must include the machine-readable YAML block from `reviewer-prompt.md` with top-level keys: `status`, `commit_sha`, `commands_run`, `red_green_evidence`, `issues`, and `fix_request`. If the block is missing or malformed, treat it as a protocol failure: re-dispatch the reviewer with the instruction to return a valid YAML block only. Do not send malformed reviewer output to a fix-agent and do not count it against code fix budgets. A valid `status: CHANGES_REQUESTED` means the gate failed — enter the fix-result handling above. A valid `status: BLOCKED` means the review could not run (missing diff, files, or context) — do not dispatch a fix-agent; supply what is missing and re-run `slice-review`, or escalate to the user.
+Once an attempt on a gate has not held, tell the next fix agent — it switches to `debug-slice-failure` and root-causes instead of patching blind.
 
 ### 4d. HITL gate
 
@@ -166,7 +141,7 @@ If the slice's `Type` is HITL, stop and ask the user to review and approve befor
 
 ### 4e. Accept the slice
 
-The code is already committed on the story branch. In the git-excluded state file `docs/specs/<slug>/.run-slices-state.md`, update this slice's row — `status` to `accepted`, `base_sha` to the slice's `BASE_SHA`, `accepted_sha` to `git rev-parse HEAD` (see *State file format* in step 3). This is the durable resume state, and the only file `run-slices` writes outside the implementation code. Record the accepted commit range (`BASE_SHA..HEAD`) in the session's slice acceptance report, mark the slice complete in TodoWrite, and keep going.
+The code is already committed on the story branch. In the git-excluded state file `docs/specs/<slug>/.run-slices-state.md`, update this slice's row — `status` to `accepted`, `base_sha` to the slice's `BASE_SHA`, `accepted_sha` to `git rev-parse HEAD` (see *State file format* in step 3). This is the durable resume state, and the only file `run-slices` writes outside the implementation code. Record the accepted commit range (`BASE_SHA..HEAD`) and any Minor review remarks in the session's slice acceptance report, mark the slice complete in TodoWrite, and keep going.
 
 ### 4f. Next
 
@@ -178,14 +153,14 @@ Invoke the **`finish-slices`** skill. Give it the session's slice acceptance rep
 
 ## Implementer status
 
-The implementer sub-agent returns one of:
+The implementer sub-agent ends its report with a `Status:` line carrying one of:
 
-- **DONE** — proceed to 4b.
-- **DONE_WITH_CONCERNS** — read the concerns; address any correctness or scope issue before 4b; otherwise note and proceed.
+- **DONE** — committed, RED/GREEN evidence shown, verification green. Proceed to 4b.
+- **DONE_WITH_CONCERNS** — committed, but the implementer flagged a doubt. Read the concern; address any correctness or scope issue before 4b, otherwise note it and proceed.
 - **NEEDS_CONTEXT** — supply the missing information and re-dispatch.
 - **BLOCKED** — assess the blocker: supply context, use a more capable model, split the slice, or escalate to the user. Never ignore an escalation; never re-dispatch the same model with no change.
 
-Status is not enough by itself. A DONE-like status must include a valid machine-readable YAML block with `status`, `commit_sha`, `commands_run`, `red_green_evidence`, `issues`, and `fix_request`. If any required field is missing, treat it as NEEDS_CONTEXT or failed commit integrity.
+A `DONE` / `DONE_WITH_CONCERNS` report with no commit SHA, or one that fails the integrity check in 4a, is a failed commit — run the Fix loop for a clean commit before continuing.
 
 ## Model selection
 
@@ -196,15 +171,15 @@ Use the least powerful model that fits each role. Mechanical slices → a fast m
 - Run a slice on `main` / `master`.
 - Skip `check-before-done` or `slice-review`, or run them in only one mode.
 - Start `slice-review` before `check-before-done` passes.
-- Accept a slice with an unresolved failed item from either gate — an item resolved by pushback is not unresolved.
+- Accept a slice while a gate still fails.
 - Trust the implementer's success claim instead of verifying.
 - Dispatch implementer sub-agents for multiple slices in parallel.
 - Make a sub-agent read the PRD or other slice files — construct its context yourself.
 - Carry context from one slice's sub-agent into the next.
 - Continue after a review fix that changed code without re-running `check-before-done`.
 - Start a slice while `git status --short` is dirty.
-- Patch the same gate a third time instead of escalating to `debug-slice-failure`.
-- Re-run a gate with the fix-agent's pushback argument as context — adjudicate disputes in the orchestrator, keep the gate independent.
+- Adjudicate a fix agent's dispute yourself instead of escalating it to the user.
+- Keep dispatching fix agents at a gate that is not making progress instead of escalating.
 - Use process-only commit subjects like "fix review feedback", "address verifier", "slice done", or "run-slices changes".
 
 ## Notes

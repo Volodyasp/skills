@@ -18,9 +18,7 @@ This is a **light** review — one focused reviewer. The heavyweight multi-agent
 
 ## Process
 
-Dispatch **one fresh code-review sub-agent**. It must not be the implementer and must not inherit the implementer's context. Give it the diff range, slice spec, repo root, CLAUDE.md path(s), and verifier PASS report. It checks:
-
-Use `reviewer-prompt.md` in this skill directory as the dispatch template.
+Dispatch **one fresh code-review sub-agent**. It must not be the implementer and must not inherit the implementer's context. Use `reviewer-prompt.md` in this skill directory as the dispatch template. Give it the diff range, slice spec, repo root, CLAUDE.md path(s), and verifier PASS report. It checks:
 
 - **Bugs** — logic errors, missed edge cases, error handling that silently swallows failures.
 - **Project conventions** — read the provided CLAUDE.md path(s); match the surrounding code.
@@ -28,24 +26,13 @@ Use `reviewer-prompt.md` in this skill directory as the dispatch template.
 - **Scope creep** — every changed line should trace to the slice's `## What to build`; flag changes that do not.
 - **Test quality** — tests should exercise real behavior and include the slice's important edge cases.
 
-It returns one status:
-
-- **APPROVED** — no blocking issues.
-- **CHANGES_REQUESTED** — concrete issues must be fixed before accepting the slice.
-- **BLOCKED** — review cannot proceed because required context, diff, or files are missing.
-
 ## Result
 
-Required report fields:
+The reviewer reports in prose and ends with a status line — `Status: <APPROVED|CHANGES_REQUESTED|BLOCKED> · Commit: <sha>`:
 
-- `status`: `APPROVED`, `CHANGES_REQUESTED`, or `BLOCKED`
-- `commit_sha`: HEAD SHA reviewed, or `null`
-- `commands_run`: exact commands/inspections used for review
-- `red_green_evidence`: TDD evidence status from verifier PASS report, or marked not applicable
-- `issues`: each issue with severity, `file:line`, why it matters, and what to change
-- `fix_request`: concise instructions for the fix agent when status is `CHANGES_REQUESTED`
-
-If the reviewer cannot produce this block, the result is BLOCKED.
+- **APPROVED** — no Critical or Important issues. Any Minor remarks are listed in the prose; they do not block the slice.
+- **CHANGES_REQUESTED** — at least one Critical or Important issue must be fixed before accepting the slice. The prose names each with `file:line` and what to change.
+- **BLOCKED** — review cannot proceed because required context, diff, or files are missing.
 
 ## Red flags — never
 
@@ -54,7 +41,7 @@ If the reviewer cannot produce this block, the result is BLOCKED.
 - Spawn a heavyweight multi-agent reviewer per slice — that is the whole-story review.
 - Approve without reading the diff range.
 - Check project conventions without reading the provided CLAUDE.md path(s).
-- Omit any required top-level key from the machine-readable result.
+- Return prose like "looks fine" instead of the `Status:` line.
 
 ## Notes
 
