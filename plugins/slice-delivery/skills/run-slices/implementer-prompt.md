@@ -50,7 +50,7 @@ Task tool:
 
     ## Commit Requirement
 
-    Commit the slice on the current story branch using the provided commit format. If no format is provided, use a plain imperative message.
+    Commit the slice on the current story branch using the provided commit format. If no format is provided, use a plain imperative message. The subject must describe the actual code/product change, not the slice machinery; avoid subjects like "slice done", "run-slices changes", or "address verifier".
     Before reporting, confirm:
 
     - `git status --short` is empty

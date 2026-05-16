@@ -70,6 +70,8 @@ If the working tree is dirty before starting a slice, stop and ask. Do not mix u
 
 `status` is `accepted` or `pending`; a `pending` row has `-` for both SHAs. Write the columns exactly as named and in this order — a later session parses this file to resume, so the format is a contract, not freeform notes.
 
+**Commit style discovery.** Before dispatching the first implementer, infer the project's commit style from explicit instructions first (`CLAUDE.md`, `AGENTS.md`, user prompt), then from `git log --oneline -20`. Pass the discovered style and 2-3 representative examples as `Commit format`. If no clear style exists, use a short imperative subject. Never impose a slice-specific syntax by default. Commit subjects should describe the actual code/product change, not delivery machinery.
+
 ## 4. Per-slice loop
 
 For each slice, in execution order:
@@ -203,9 +205,10 @@ Use the least powerful model that fits each role. Mechanical slices → a fast m
 - Start a slice while `git status --short` is dirty.
 - Patch the same gate a third time instead of escalating to `debug-slice-failure`.
 - Re-run a gate with the fix-agent's pushback argument as context — adjudicate disputes in the orchestrator, keep the gate independent.
+- Use process-only commit subjects like "fix review feedback", "address verifier", "slice done", or "run-slices changes".
 
 ## Notes
 
 - Single branch delivery: every accepted slice is represented by one or more commits on the story branch. The orchestrator uses `BASE_SHA..HEAD` as the slice boundary.
-- Commit style: follow explicit user/project instructions first. If none exist, use a plain imperative message.
+- Commit style: discover and follow the project's existing style; if none is clear, use a short imperative subject.
 - Planning artifacts: treat `docs/specs/<slug>/` as uncommitted planning output by default. If the project intentionally tracks specs/docs, follow that project convention instead.

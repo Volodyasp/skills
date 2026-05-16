@@ -66,7 +66,9 @@ Task tool:
     - {LINT_BUILD_COMMANDS_OR_NONE}
 
     Commit the fix on the current story branch using the provided commit format,
-    or a plain imperative message if none is given.
+    or a plain imperative message if none is given. The subject must describe the
+    actual code/product change, not the gate process; avoid subjects like
+    "fix review feedback", "address verifier", or "run-slices changes".
 
     If this is a pushback-only result — you changed no code — make no commit and
     run no fix verification; instead capture, for each pushed-back item, the
