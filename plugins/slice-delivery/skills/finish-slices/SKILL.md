@@ -65,7 +65,7 @@ Ask the user to choose:
 - Offer a PR or merge while verification is red.
 - Push to `main` / `master`.
 - Invent risks or test steps that did not happen.
-- Claim "all slices done" without `run-slices` confirming it.
+- Claim "all slices done" without a `run-slices` acceptance report or explicit user confirmation.
 - Retry a `git push` yourself when a safety hook blocks it — hand the command to the user.
 
 ## Notes

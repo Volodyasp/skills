@@ -127,7 +127,7 @@ Handle the fix result the same way as 4b — first confirm whether code changed:
 - **Code changed** -> re-run `check-before-done` first (a review fix can break behaviour), then re-run `slice-review`.
 - **Pushback only** (`status: DONE_WITH_CONCERNS`, no commit, HEAD unchanged) -> do not re-run either gate. The orchestrator adjudicates the dispute itself.
 
-Adjudicate every pushed-back review item yourself: convincing evidence -> **resolved by pushback**; unconvincing -> still a **failed gate item**; uncertain -> stop and ask the user. Code-quality feedback is judgement, so a pushback here can be legitimate — but a real bug the reviewer found is not a difference of opinion.
+Adjudicate every pushed-back review item yourself, the same way as 4b — each is an `issues` entry carrying the fix-agent's `evidence`. Convincing evidence -> **resolved by pushback** against the current diff; it stays resolved only while later fix rounds leave the files its evidence relied on untouched, and a later code change touching any of those files forces re-adjudication. Unconvincing -> still a **failed gate item**. Uncertain -> stop and ask the user. Code-quality feedback is judgement, so a pushback here can be legitimate — but a real bug the reviewer found is not a difference of opinion.
 
 The gate is satisfied when every review item is either fixed (the re-runs confirm it) or resolved by pushback. Budget: 2 rounds — a pushback-only round counts. Still failing -> stop and report to the user.
 
