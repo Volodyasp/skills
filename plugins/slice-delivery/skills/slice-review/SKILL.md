@@ -14,11 +14,10 @@ This is a **light** review — one focused reviewer. The heavyweight multi-agent
 - The **diff range** for the slice, usually `BASE_SHA..HEAD`.
 - The **slice spec** — `## What to build` and `## Acceptance criteria` — so the reviewer can judge scope.
 - The **repo root** and relevant CLAUDE.md path(s), so project conventions can be checked.
-- The `check-before-done` PASS report.
 
 ## Process
 
-Dispatch **one fresh code-review sub-agent**. It must not be the implementer and must not inherit the implementer's context. Use `reviewer-prompt.md` in this skill directory as the dispatch template. Give it the diff range, slice spec, repo root, CLAUDE.md path(s), and verifier PASS report. It checks:
+Dispatch **one fresh code-review sub-agent**. It must not be the implementer and must not inherit the implementer's context. Use `reviewer-prompt.md` in this skill directory as the dispatch template. Give it the diff range, slice spec, repo root, and CLAUDE.md path(s). It checks:
 
 - **Bugs** — logic errors, missed edge cases, error handling that silently swallows failures.
 - **Project conventions** — read the provided CLAUDE.md path(s); match the surrounding code.

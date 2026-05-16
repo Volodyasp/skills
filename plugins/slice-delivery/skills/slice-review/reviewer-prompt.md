@@ -23,10 +23,6 @@ Task tool:
 
     {FULL_SLICE_SPEC}
 
-    ## Verifier PASS Report
-
-    {CHECK_BEFORE_DONE_PASS_REPORT}
-
     ## Review Rules
 
     - Read the diff range. Do not review from the implementer's summary.
