@@ -17,7 +17,7 @@ Task tool:
     Repo root: {REPO_ROOT}
     Current branch: {BRANCH}
     Diff range: {BASE_SHA}..HEAD
-    CLAUDE.md path(s): {CLAUDE_MD_PATHS_OR_NONE}
+    Convention docs: {CONVENTION_DOC_PATHS_OR_NONE}
 
     ## Slice Spec
 
@@ -26,14 +26,14 @@ Task tool:
     ## Review Rules
 
     - Read the diff range. Do not review from the implementer's summary.
-    - Read the provided CLAUDE.md path(s), or state that none were provided.
+    - Read the provided project convention docs (e.g. `CLAUDE.md`, `AGENTS.md`), or state that none were provided.
     - Do not rerun a heavyweight full-story review.
     - Do not ask for unrelated refactors or nice-to-haves.
 
     ## Check For
 
     - Bugs, missed edge cases, silent error swallowing.
-    - Project convention violations from CLAUDE.md and surrounding code.
+    - Project convention violations from the provided convention docs and the surrounding code.
     - Debug prints, commented-out code, accidental TODOs.
     - Scope creep: changed lines that do not trace to the slice spec.
     - Tests that only test mocks, miss important behavior, or do not prove the slice.

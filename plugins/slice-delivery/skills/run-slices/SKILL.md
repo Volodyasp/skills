@@ -98,7 +98,7 @@ git rev-list --count "$BASE_SHA"..HEAD
 git diff --stat "$BASE_SHA"..HEAD
 ```
 
-`git status --short` must be empty, `rev-list --count` must be at least 1, and the diff must not include planning artifacts unless the user or project explicitly tracks them. If `rev-list --count` is `0`, this is not a fix-loop case — re-dispatch the implementer once with an explicit commit requirement; if it still returns without a commit, stop and escalate. Any other integrity failure goes to the **Fix loop** with the integrity failure as gate feedback and requires a clean commit before continuing.
+`git status --short` must be empty, `rev-list --count` must be at least 1, and the diff must not include planning artifacts unless the user or project explicitly tracks them. If `rev-list --count` is `0`, this is not a fix-loop case — re-dispatch the implementer once with an explicit commit requirement; if it still returns without a commit, stop and escalate. Any other integrity failure goes to the **Fix loop** (gate name: `commit-integrity`) with the integrity failure as gate feedback and requires a clean commit before continuing.
 
 Then handle the implementer's `Status:` (see *Implementer status*). On `DONE` / `DONE_WITH_CONCERNS` proceed to 4b.
 
@@ -113,7 +113,7 @@ Runs automatically for every slice, in both modes. Invoke the **`check-before-do
 
 ### 4c. Slice review
 
-Runs automatically for every slice, in both modes - only after 4b passes. Invoke the **`slice-review`** skill. Give it the `BASE_SHA..HEAD` diff, the full slice spec, the current branch, the repo root, and the relevant CLAUDE.md path(s). It dispatches its own fresh code-review sub-agent.
+Runs automatically for every slice, in both modes - only after 4b passes. Invoke the **`slice-review`** skill. Give it the `BASE_SHA..HEAD` diff, the full slice spec, the current branch, the repo root, and the project's convention doc path(s). It dispatches its own fresh code-review sub-agent.
 
 - `APPROVED` → go to 4d. If the reviewer noted Minor remarks, record them in the slice acceptance report; they do not block the slice.
 - `CHANGES_REQUESTED` → run the **Fix loop** for this gate.
@@ -164,7 +164,7 @@ The implementer sub-agent ends its report with a `Status:` line carrying one of:
 
 If the `Status:` line is missing or malformed, treat it as a report-format failure. If the prose is explicitly `NEEDS_CONTEXT` or `BLOCKED`, handle it as such. Otherwise re-dispatch once with an explicit status-line requirement; if it is still malformed, escalate to the user.
 
-A `DONE` / `DONE_WITH_CONCERNS` report with no commit SHA, or one that fails the integrity check in 4a, is a failed commit — run the Fix loop for a clean commit before continuing.
+A `DONE` / `DONE_WITH_CONCERNS` report that fails 4a's `commit-integrity` check is handled there — re-dispatch the implementer for a missing commit, the Fix loop otherwise.
 
 ## Model selection
 

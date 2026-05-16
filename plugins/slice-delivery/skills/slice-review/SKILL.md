@@ -13,14 +13,14 @@ This is a **light** review — one focused reviewer. The heavyweight multi-agent
 
 - The **diff range** for the slice, usually `BASE_SHA..HEAD`.
 - The **slice spec** — `## What to build` and `## Acceptance criteria` — so the reviewer can judge scope.
-- The **repo root** and relevant CLAUDE.md path(s), so project conventions can be checked.
+- The **repo root** and the project's convention doc path(s) (`CLAUDE.md`, `AGENTS.md`, or equivalent), so project conventions can be checked.
 
 ## Process
 
-Dispatch **one fresh code-review sub-agent**. It must not be the implementer and must not inherit the implementer's context. Use `reviewer-prompt.md` in this skill directory as the dispatch template. Give it the diff range, slice spec, repo root, and CLAUDE.md path(s). It checks:
+Dispatch **one fresh code-review sub-agent**. It must not be the implementer and must not inherit the implementer's context. Use `reviewer-prompt.md` in this skill directory as the dispatch template. Give it the diff range, slice spec, repo root, and convention doc path(s). It checks:
 
 - **Bugs** — logic errors, missed edge cases, error handling that silently swallows failures.
-- **Project conventions** — read the provided CLAUDE.md path(s); match the surrounding code.
+- **Project conventions** — read the provided convention docs; match the surrounding code.
 - **Leftover cruft** — debug prints, commented-out code, stray TODOs that are not intentional documented seams.
 - **Scope creep** — every changed line should trace to the slice's `## What to build`; flag changes that do not.
 - **Test quality** — tests should exercise real behavior and include the slice's important edge cases.
@@ -39,7 +39,7 @@ The reviewer reports in prose and ends with a status line — `Status: <APPROVED
 - Let the implementer review its own slice.
 - Spawn a heavyweight multi-agent reviewer per slice — that is the whole-story review.
 - Approve without reading the diff range.
-- Check project conventions without reading the provided CLAUDE.md path(s).
+- Check project conventions without reading the provided convention docs.
 - Return prose like "looks fine" instead of the `Status:` line.
 
 ## Notes
