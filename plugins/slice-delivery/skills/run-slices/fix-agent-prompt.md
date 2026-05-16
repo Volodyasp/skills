@@ -39,6 +39,7 @@ Task tool:
     - Do not rewrite the slice or add new features.
     - Do not edit or commit planning artifacts unless the project intentionally tracks them or you were explicitly told.
     - If the feedback is wrong, explain why with code/test evidence instead of blindly changing code.
+    - If every remaining item is pushback-only and no code changes are needed, do not create an empty commit.
 
     ## Fix Discipline
 
@@ -97,7 +98,11 @@ Task tool:
     `null`), `problem`, and `fix`.
 
     For DONE, `commit_sha` must be non-null, `commands_run` must include the
-    verification command, and `fix_request` must be empty. Use
-    `red_green_evidence.status: NOT_APPLICABLE` only when the fix did not need a new
-    failing test; otherwise include RED/GREEN evidence for changed behavior.
+    verification command, and `fix_request` must be empty. For
+    DONE_WITH_CONCERNS with pushback-only feedback, `commit_sha` may be null only
+    when `git status --short` is empty and no code changed; include the inspected
+    evidence in `commands_run` / `issues`, and leave `fix_request` empty only when
+    no actionable fixes remain. Use `red_green_evidence.status: NOT_APPLICABLE`
+    only when the fix did not need a new failing test; otherwise include
+    RED/GREEN evidence for changed behavior.
 ```

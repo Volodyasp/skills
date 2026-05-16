@@ -26,7 +26,16 @@ Run the project's full verification freshly — the whole test suite, plus lint 
 
 ## 3. Summarise what shipped
 
-Determine the branch point (`git merge-base` with the base branch). Build the summary from the slice files and the slice commit ranges recorded by `run-slices`:
+Determine the branch point (`git merge-base` with the base branch). Prefer the slice acceptance report passed by `run-slices`; it contains the exact `BASE_SHA..HEAD` range for each accepted slice.
+
+If no acceptance report is available because the session was interrupted or `finish-slices` is being run later, reconstruct a best-effort summary:
+
+- Read the slice files for slice number, title, and HITL / AFK type.
+- Read `git log --oneline --reverse <base>..HEAD` and the whole-branch diffstat.
+- Match commits to slices only when commit messages or changed files make the mapping clear.
+- If a per-slice range cannot be reconstructed confidently, write `range unknown` instead of inventing one.
+
+Build the summary from the available evidence:
 
 - Each slice — number, title, commit range, HITL / AFK.
 - The whole-branch diffstat (`git diff --stat <base>..HEAD`).

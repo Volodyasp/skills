@@ -27,7 +27,9 @@ Every fix must trace to a gate item and to the slice's `## What to build`. A "ni
 
 ## Result
 
-For each feedback item: **fixed** (with the commit) or **pushed back** (with evidence). Report both in the fix sub-agent's YAML result — fixes under `commands_run` / `commit_sha`, rejected items under `issues` with the evidence. Set `status: DONE_WITH_CONCERNS` when any item was pushed back, so `run-slices` can adjudicate.
+For each feedback item: **fixed** (with the commit) or **pushed back** (with evidence). Report both in the fix sub-agent's YAML result - fixes under `commands_run` / `commit_sha`, rejected items under `issues` with the evidence. Set `status: DONE_WITH_CONCERNS` when any item was pushed back, so `run-slices` can adjudicate.
+
+Pushback-only result: if no code changes are required, do not create an empty commit. Return `commit_sha: null`, prove `git status --short` is clean in `commands_run`, put the rejected item evidence under `issues`, and keep `fix_request: []` only when there are no actionable fixes left.
 
 ## Red flags — never
 
