@@ -7,7 +7,7 @@ description: Use when the user wants to implement, ship, run, or build vertical 
 
 Execute the vertical slices of a story on one story branch. Each slice runs through: fresh implementer sub-agent -> TDD implementation -> commit -> check-before-done -> slice-review -> next slice. Fresh sub-agents keep context from leaking between slices; the single story branch keeps git mechanics simple and predictable.
 
-Execution half of the local spec pipeline: `/to-prd → /to-slices → /run-slices`.
+Execution half of the local spec pipeline: `/to-prd → /to-slices → /run-slices → /finish-slices`.
 
 **Core principle:** fresh sub-agent per slice + TDD + two gates - does it meet the slice spec (`check-before-done`), then is the code good (`slice-review`) - gives Superpowers-style delivery for vertical slices.
 
@@ -96,7 +96,7 @@ The implementer result must include the machine-readable YAML block from `implem
 
 Runs automatically for every slice, in both modes. Invoke the **`check-before-done`** skill. Give it the full slice spec, acceptance criteria, current branch, `BASE_SHA..HEAD` diff range, verification commands, and the latest implementer/fix-agent YAML result. It dispatches its own fresh verification sub-agent.
 
-Any item fails -> dispatch a fresh fix sub-agent on the same branch with the verifier's report, the slice spec, and the current diff. Use `fix-agent-prompt.md`. The fix sub-agent must make a clean commit. Re-run `check-before-done`. Budget: 2 fix rounds. Still failing -> stop and report to the user.
+Any item fails -> dispatch a fresh fix sub-agent on the same branch with the verifier's report, the slice spec, the current diff, and the fix-round number. Use `fix-agent-prompt.md`. The fix sub-agent applies the **`handle-review-feedback`** discipline: verify each item against the code, push back on wrong or out-of-scope items with evidence, fix one at a time. On the **second** consecutive failure of this gate it applies **`debug-slice-failure`** instead — root cause before any further patch. The fix sub-agent must make a clean commit. Re-run `check-before-done`. Budget: 2 fix rounds. Still failing -> stop and report to the user.
 
 The verifier result must include the machine-readable YAML block from `verifier-prompt.md` with top-level keys: `status`, `commit_sha`, `commands_run`, `red_green_evidence`, `issues`, and `fix_request`. If the block is missing or malformed, treat it as a protocol failure: re-dispatch the verifier with the instruction to return a valid YAML block only. Do not send malformed verifier output to a fix-agent and do not count it against code fix budgets. If the YAML is valid but says anything other than `status: PASS`, the slice is not accepted.
 
@@ -104,7 +104,7 @@ The verifier result must include the machine-readable YAML block from `verifier-
 
 Runs automatically for every slice, in both modes - only after 4b passes. Invoke the **`slice-review`** skill. Give it the `BASE_SHA..HEAD` diff, the full slice spec, current branch, repo root, and relevant CLAUDE.md path(s). It dispatches its own fresh code-review sub-agent.
 
-Issues -> dispatch a fresh fix sub-agent on the same branch with the review report, the slice spec, and the current diff. Use `fix-agent-prompt.md`. The fix sub-agent must make a clean commit. Re-run `check-before-done` first, then re-run `slice-review`. Budget: 2 rounds. Still failing -> stop and report to the user.
+Issues -> dispatch a fresh fix sub-agent on the same branch with the review report, the slice spec, the current diff, and the fix-round number. Use `fix-agent-prompt.md`. The fix sub-agent applies the **`handle-review-feedback`** discipline: verify each review item, push back on out-of-scope or wrong comments with evidence instead of complying blindly. The fix sub-agent must make a clean commit. Re-run `check-before-done` first, then re-run `slice-review`. Budget: 2 rounds. Still failing -> stop and report to the user.
 
 The reviewer result must include the machine-readable YAML block from `reviewer-prompt.md` with top-level keys: `status`, `commit_sha`, `commands_run`, `red_green_evidence`, `issues`, and `fix_request`. If the block is missing or malformed, treat it as a protocol failure: re-dispatch the reviewer with the instruction to return a valid YAML block only. Do not send malformed reviewer output to a fix-agent and do not count it against code fix budgets. If the YAML is valid but says anything other than `status: APPROVED`, the slice is not accepted.
 
@@ -122,7 +122,7 @@ Step-by-step: stop here and report; continue on the user's go-ahead. Autonomous:
 
 ## 5. After all slices
 
-Run final verification for the story branch using the project test command. Report what shipped, the slice commit ranges, and any residual risk. Suggest the user run a heavyweight review (`/ultrareview` or `/review`) over the full story branch, then open the PR.
+Invoke the **`finish-slices`** skill. It runs final verification on the whole story branch, summarises what shipped with slice commit ranges, assembles a PR body, and offers the delivery options (push and open a PR, keep the branch, heavyweight review, stop).
 
 ## Implementer status
 
@@ -151,6 +151,7 @@ Use the least powerful model that fits each role. Mechanical slices → a fast m
 - Carry context from one slice's sub-agent into the next.
 - Continue after a failed review fix without re-running `check-before-done`.
 - Start a slice while `git status --short` is dirty.
+- Patch the same gate a third time instead of escalating to `debug-slice-failure`.
 
 ## Notes
 

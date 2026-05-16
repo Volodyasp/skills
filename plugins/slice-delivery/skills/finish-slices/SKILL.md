@@ -1,0 +1,65 @@
+---
+name: finish-slices
+description: Use after run-slices has delivered every slice of a story and the story branch needs final verification and a delivery decision — push and open a PR, keep the branch, run a heavyweight review, or stop.
+---
+
+# Finish Slices
+
+Close out a story once `run-slices` has accepted every slice. Run final verification on the whole story branch, summarise what shipped, assemble a PR body, and let the user choose how to deliver it.
+
+Final step of the local spec pipeline: `/to-prd → /to-slices → /run-slices → /finish-slices`.
+
+This skill finishes a *story*, not a slice. Per-slice acceptance is `check-before-done` + `slice-review`, already done inside `run-slices`. Here the unit of work is the whole branch.
+
+## 1. Confirm preconditions
+
+- The current branch is the story branch — never `main` / `master`.
+- Every slice is accepted. If `run-slices` left slices unfinished, stop and tell the user to finish it first.
+- `git status --short` is clean. If dirty, stop and ask — uncommitted work must not ride into the delivery decision.
+
+## 2. Run final verification
+
+Run the project's full verification freshly — the whole test suite, plus lint / build if the project has them. Read the complete output: exit codes, pass/fail counts, actual failures.
+
+- All green → continue.
+- Anything red → stop. Report the failures. Do NOT offer a PR or merge on a red branch. Hand the failures back so the user can re-open `run-slices` or apply `debug-slice-failure`.
+
+## 3. Summarise what shipped
+
+Determine the branch point (`git merge-base` with the base branch). Build the summary from the slice files and the slice commit ranges recorded by `run-slices`:
+
+- Each slice — number, title, commit range, HITL / AFK.
+- The whole-branch diffstat (`git diff --stat <base>..HEAD`).
+
+## 4. Assemble the PR body
+
+Write a PR body with these sections:
+
+- **Summary** — what the story delivers, in the project's domain language.
+- **Slices shipped** — one line per slice: `NNN — Title`.
+- **Test plan** — the verification commands from step 2 and their result.
+- **Known risks** — residual risk, edge cases left for later, follow-ups. Only real items — never invent risks to fill the section; write "None identified" if there are none.
+
+Present it. Offer to save it to a temp file (`mktemp`) so it can be passed to `gh pr create --body-file`.
+
+## 5. Offer delivery options
+
+Ask the user to choose:
+
+1. **Push and open a PR** — give the exact commands: `git push -u origin <branch>` and `gh pr create --base <base> --title "<title>" --body-file <file>`. If a safety hook blocks `git push`, hand the commands to the user to run with the `!` prefix; do not retry the push yourself.
+2. **Keep the branch as-is** — report the branch name and stop.
+3. **Run a heavyweight review first** — suggest `/ultrareview` or `/review` over the whole branch, then return here.
+4. **Stop** — report state and stop.
+
+## Red flags — never
+
+- Offer a PR or merge while verification is red.
+- Push to `main` / `master`.
+- Invent risks or test steps that did not happen.
+- Claim "all slices done" without `run-slices` confirming it.
+- Retry a `git push` yourself when a safety hook blocks it — hand the command to the user.
+
+## Notes
+
+- Single-branch delivery: there is no worktree to clean up. The story branch *is* the deliverable.
+- This skill prepares delivery; it does not merge to `main` on its own. The user makes the final call.

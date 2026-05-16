@@ -1,7 +1,7 @@
 {
   "name": "slice-delivery",
-  "version": "0.1.0",
-  "description": "Execution half of the local-markdown spec pipeline. Runs the vertical slices from /to-slices on one story branch: a fresh implementer sub-agent per slice, TDD, then two gates — check-before-done (verification) and slice-review (code quality). Skills: run-slices, check-before-done, slice-review.",
+  "version": "0.2.0",
+  "description": "Execution half of the local-markdown spec pipeline. run-slices drives the vertical slices from /to-slices on one story branch — a fresh implementer sub-agent per slice, TDD, two gates (check-before-done, slice-review), disciplined fix rounds (handle-review-feedback, debug-slice-failure), and a finish-slices delivery step. Skills: run-slices, check-before-done, slice-review, handle-review-feedback, debug-slice-failure, finish-slices.",
   "author": {
     "name": "Vladimir Suponin",
     "email": "suponin.vldmr@gmail.com"
@@ -11,7 +11,10 @@
   "skills": [
     "./skills/run-slices",
     "./skills/check-before-done",
-    "./skills/slice-review"
+    "./skills/slice-review",
+    "./skills/handle-review-feedback",
+    "./skills/debug-slice-failure",
+    "./skills/finish-slices"
   ],
   "keywords": [
     "claude-code",

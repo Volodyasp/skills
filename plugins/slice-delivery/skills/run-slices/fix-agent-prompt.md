@@ -17,6 +17,7 @@ Task tool:
     Original slice base SHA: {BASE_SHA}
     Current HEAD: {HEAD_SHA}
     Gate that failed: {GATE_NAME}
+    Fix round: {FIX_ROUND}
     Commit format: {COMMIT_FORMAT_OR_DEFAULT}
 
     ## Slice Spec
@@ -38,6 +39,20 @@ Task tool:
     - Do not rewrite the slice or add new features.
     - Do not edit or commit planning artifacts unless the project intentionally tracks them or you were explicitly told.
     - If the feedback is wrong, explain why with code/test evidence instead of blindly changing code.
+
+    ## Fix Discipline
+
+    Follow the `handle-review-feedback` skill. Each feedback item is a hypothesis:
+    restate it, verify it against the code, then fix it or push back with
+    `file:line` evidence if it is wrong or outside the slice spec. Fix one item at
+    a time and run its targeted test before the next. Set
+    `status: DONE_WITH_CONCERNS` if you push back on any item.
+
+    If `Fix round` is 2 or higher, the previous fix did not hold — switch to the
+    `debug-slice-failure` skill. Stop patching: reproduce the failure, find the
+    root cause, confirm one hypothesis, then make a single minimal fix at the
+    right seam with a regression test. If the root cause is architectural, return
+    `status: BLOCKED` with the root cause instead of guessing again.
 
     ## Verification
 

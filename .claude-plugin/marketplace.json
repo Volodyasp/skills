@@ -17,7 +17,7 @@
     },
     {
       "name": "slice-delivery",
-      "description": "Execution half of the local-markdown spec pipeline: runs vertical slices from /to-slices through TDD with two quality gates (check-before-done, slice-review). Skills: run-slices, check-before-done, slice-review.",
+      "description": "Execution half of the local-markdown spec pipeline: runs vertical slices from /to-slices through TDD, two quality gates, disciplined fix rounds, and a finish-slices delivery step.",
       "category": "development",
       "source": "./plugins/slice-delivery",
       "homepage": "https://github.com/Volodyasp/skills"
