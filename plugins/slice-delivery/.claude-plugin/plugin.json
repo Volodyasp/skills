@@ -1,6 +1,6 @@
 {
   "name": "slice-delivery",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Execution half of the local-markdown spec pipeline. run-slices drives the vertical slices from /to-slices on one story branch — a fresh implementer sub-agent per slice, TDD, two gates (check-before-done, slice-review), disciplined fix rounds (handle-review-feedback, debug-slice-failure), and a finish-slices delivery step. Skills: run-slices, check-before-done, slice-review, handle-review-feedback, debug-slice-failure, finish-slices.",
   "author": {
     "name": "Vladimir Suponin",

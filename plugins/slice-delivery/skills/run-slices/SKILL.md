@@ -36,7 +36,7 @@ No parallel mode. Slices commonly touch overlapping files and later slices build
 
 Confirm the current branch is the story branch. If not, ask the user. Never run a slice on `main` / `master`.
 
-**Exclude the state file first.** Before anything inspects the tree, make sure the resume state file is git-ignored: if `git check-ignore docs/specs/<slug>/.run-slices-state.md` does not already report it ignored, append that path to `.git/info/exclude` (per-clone, idempotent — never the shared `.gitignore`). This must run before any clean-tree check — otherwise an existing state file reads as a dirty tree and stops the run.
+**Exclude the planning artifacts first.** Before anything inspects the tree, git-ignore the story's planning directory so the PRD, the slice files, and the resume state file cannot read as a dirty tree: if `git check-ignore docs/specs/<slug>/` does not already report it ignored, append `docs/specs/<slug>/` to `.git/info/exclude` (per-clone, idempotent — never the shared `.gitignore`). One line covers the whole directory. This must run before any clean-tree check — otherwise the untracked PRD and slice files (and an existing state file) read as a dirty tree and stop the run on the very artifacts this skill consumes. If the project intentionally tracks `docs/specs/`, the files are already committed and this exclude is a harmless no-op.
 
 Run a clean working-tree check before starting:
 
@@ -98,7 +98,7 @@ git rev-list --count "$BASE_SHA"..HEAD
 git diff --stat "$BASE_SHA"..HEAD
 ```
 
-`git status --short` must be empty, `rev-list --count` must be at least 1, and the diff must not include planning artifacts unless the user or project explicitly tracks them. If `rev-list --count` is `0`, this is not a fix-loop case — re-dispatch the implementer once with an explicit commit requirement; if it still returns without a commit, stop and escalate. Any other integrity failure goes to the **Fix loop** (gate name: `commit-integrity`) with the integrity failure as gate feedback and requires a clean commit before continuing.
+`git status --short` must be empty, `rev-list --count` must be at least 1, and the diff must not include planning artifacts unless the user or project explicitly tracks them. If `rev-list --count` is `0`, this is not a fix-loop case — re-dispatch the implementer once with an explicit commit requirement; if it still returns without a commit, stop and escalate. Any other integrity failure goes to the **Fix loop** (gate name: `commit-integrity`) with the integrity failure as gate feedback and requires a clean commit before continuing. Also cross-check the sha on the implementer's `Status:` line against `git rev-parse HEAD`: a mismatch means the report is unreliable — discount its RED/GREEN and commit claims, rely only on `git` and the gate verdicts, and escalate if you cannot confirm HEAD is this slice's implementation commit.
 
 Then handle the implementer's `Status:` (see *Implementer status*). On `DONE` / `DONE_WITH_CONCERNS` proceed to 4b.
 
