@@ -105,7 +105,10 @@ Task tool:
 
     When reporting issues, each item in `issues` must include `severity`
     (`Critical`, `Important`, or `Minor`), `file_line` (path:line string or
-    `null`), `problem`, and `fix`.
+    `null`), `problem`, `fix`, and `evidence`. For a pushed-back item, `fix` is
+    `null` — you are disputing it, not fixing it — and `evidence` is the proof:
+    the code, test, or slice-spec references that show the item is wrong or out
+    of scope. For a normal fix or concern, `evidence` may be `null`.
 
     For DONE, `commit_sha` must be non-null, `commands_run` must include the
     verification command, and `fix_request` must be empty. For

@@ -33,9 +33,9 @@ Every fix must trace to a gate item and to the slice's `## What to build`. A "ni
 
 ## Result
 
-For each feedback item: **fixed** (with the commit) or **pushed back** (with evidence). Report both in the fix sub-agent's YAML result - fixes under `commands_run` / `commit_sha`, rejected items under `issues` with the evidence. Set `status: DONE_WITH_CONCERNS` when any item was pushed back, so `run-slices` can adjudicate.
+For each feedback item: **fixed** (with the commit) or **pushed back** (with evidence). Report both in the fix sub-agent's YAML result - fixes under `commands_run` / `commit_sha`, rejected items under `issues`, each with its `evidence` field populated. Set `status: DONE_WITH_CONCERNS` when any item was pushed back, so `run-slices` can adjudicate.
 
-Pushback-only result: if no code changes are required, make no commit. Return `commit_sha: null` and prove no code changed — `commands_run` must show `git rev-parse HEAD` still equal to the input `Current HEAD` and `git status --short` clean. Put the rejected items and their evidence under `issues`.
+Pushback-only result: if no code changes are required, make no commit. Return `commit_sha: null` and prove no code changed — `commands_run` must show `git rev-parse HEAD` still equal to the input `Current HEAD` and `git status --short` clean. Report each rejected item under `issues` with its `evidence` field populated.
 
 ## Red flags — never
 
