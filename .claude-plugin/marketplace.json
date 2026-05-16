@@ -16,6 +16,13 @@
       "homepage": "https://github.com/Volodyasp/skills"
     },
     {
+      "name": "slice-delivery",
+      "description": "Execution half of the local-markdown spec pipeline: runs vertical slices from /to-slices through TDD with two quality gates (check-before-done, slice-review). Skills: run-slices, check-before-done, slice-review.",
+      "category": "development",
+      "source": "./plugins/slice-delivery",
+      "homepage": "https://github.com/Volodyasp/skills"
+    },
+    {
       "name": "safety-hooks",
       "description": "Block dangerous git commands and access to secret files. Per-project whitelist via .claude/safety-hooks.local.md.",
       "category": "safety",

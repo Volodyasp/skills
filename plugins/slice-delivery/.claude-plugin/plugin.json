@@ -1,0 +1,25 @@
+{
+  "name": "slice-delivery",
+  "version": "0.1.0",
+  "description": "Execution half of the local-markdown spec pipeline. Runs the vertical slices from /to-slices on one story branch: a fresh implementer sub-agent per slice, TDD, then two gates — check-before-done (verification) and slice-review (code quality). Skills: run-slices, check-before-done, slice-review.",
+  "author": {
+    "name": "Vladimir Suponin",
+    "email": "suponin.vldmr@gmail.com"
+  },
+  "homepage": "https://github.com/Volodyasp/skills",
+  "license": "MIT",
+  "skills": [
+    "./skills/run-slices",
+    "./skills/check-before-done",
+    "./skills/slice-review"
+  ],
+  "keywords": [
+    "claude-code",
+    "skills",
+    "vertical-slice",
+    "spec-driven",
+    "tdd",
+    "subagent",
+    "agentic-workflow"
+  ]
+}
