@@ -36,6 +36,8 @@ No parallel mode. Slices commonly touch overlapping files and later slices build
 
 Confirm the current branch is the story branch. If not, ask the user. Never run a slice on `main` / `master`.
 
+**Exclude the state file first.** Before anything inspects the tree, make sure the resume state file is git-ignored: if `git check-ignore docs/specs/<slug>/.run-slices-state.md` does not already report it ignored, append that path to `.git/info/exclude` (per-clone, idempotent — never the shared `.gitignore`). This must run before the clean-tree check below — otherwise an existing state file reads as a dirty tree and stops the run.
+
 Before the first slice and before every later slice, run a clean working-tree check:
 
 ```bash
@@ -45,15 +47,28 @@ git rev-parse --abbrev-ref HEAD
 
 If the working tree is dirty before starting a slice, stop and ask. Do not mix user changes or planning artifacts into slice commits.
 
-**Resume an interrupted run.** `run-slices` tracks progress in one state file, `docs/specs/<slug>/.run-slices-state.md` — a checklist of the slices, each accepted one recording the commit it was accepted at. The file lives on disk but is **git-excluded**, so it never shows in a `git status` check and never gets committed; it does not touch the slice files.
+**Resume an interrupted run.** `run-slices` tracks progress in one state file, `docs/specs/<slug>/.run-slices-state.md` (git-excluded — see the step above) — a table of the slices, each accepted one recording the commit it was accepted at. It lives on disk, never gets committed, and does not touch the slice files.
 
-- First run for a story: create the state file (every slice unchecked) and add its path to `.git/info/exclude` if not already there — never touch the shared `.gitignore`.
+- First run for a story: create the state file with one `pending` row per slice, in execution order — see *State file format* below.
 - State file already exists → a prior run was interrupted. Take the longest unbroken prefix of slices it marks accepted.
 - Verify before trusting — the file is a hint, not proof: confirm each accepted slice's recorded commit is an ancestor of the current branch HEAD (`git merge-base --is-ancestor`), then run the project verification command once against HEAD — it must be green. A mismatch or a red suite → the state is stale; stop and report.
 - Branch HEAD equals the last accepted slice's recorded commit → resume at the next slice; mark the resumed-past slices complete in the TodoWrite.
 - Branch HEAD is ahead of it → an interrupted slice left commits behind. Stop and ask the user to reset the branch to that commit (redo the slice) or keep the commits — never `git reset` yourself.
 - Every slice already accepted → nothing to run; tell the user and suggest `/finish-slices`.
 - No state file, or no slice accepted → start at slice 1, as normal.
+
+**State file format.** A markdown table, one row per slice in execution order, with exactly these columns:
+
+```markdown
+# run-slices state — <slug>
+
+| slice | file | status | base_sha | accepted_sha |
+|-------|------|--------|----------|--------------|
+| 001 | 001-add-jwt.md | accepted | a1b2c3d | e4f5a6b |
+| 002 | 002-refresh-token.md | pending | - | - |
+```
+
+`status` is `accepted` or `pending`; a `pending` row has `-` for both SHAs. Write the columns exactly as named and in this order — a later session parses this file to resume, so the format is a contract, not freeform notes.
 
 ## 4. Per-slice loop
 
@@ -149,7 +164,7 @@ If the slice's `Type` is HITL, stop and ask the user to review and approve befor
 
 ### 4e. Accept the slice
 
-The code is already committed on the story branch. In the git-excluded state file `docs/specs/<slug>/.run-slices-state.md`, mark this slice accepted and record the commit it was accepted at (`git rev-parse HEAD`) — this is the durable resume state, and it is the only file `run-slices` writes outside the implementation code. Record the accepted commit range (`BASE_SHA..HEAD`) in the session's slice acceptance report, mark the slice complete in TodoWrite, and keep going.
+The code is already committed on the story branch. In the git-excluded state file `docs/specs/<slug>/.run-slices-state.md`, update this slice's row — `status` to `accepted`, `base_sha` to the slice's `BASE_SHA`, `accepted_sha` to `git rev-parse HEAD` (see *State file format* in step 3). This is the durable resume state, and the only file `run-slices` writes outside the implementation code. Record the accepted commit range (`BASE_SHA..HEAD`) in the session's slice acceptance report, mark the slice complete in TodoWrite, and keep going.
 
 ### 4f. Next
 
