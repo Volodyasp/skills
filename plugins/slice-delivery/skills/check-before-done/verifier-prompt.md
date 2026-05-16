@@ -62,13 +62,13 @@ Task tool:
         command: null # exact command string, or null
         exit_code: null # integer, or null
         pass_summary: null # pass summary string, or null
-    issues:
-      - severity: Important # Critical | Important | Minor
-        file_line: null # path:line string, or null
-        problem: "failed criterion, missing evidence, or blocker"
-        fix: "what must change"
+    issues: [] # issue objects; empty if PASS
     fix_request: [] # concrete fix items, empty if PASS
     ```
+
+    When reporting issues, each item in `issues` must include `severity`
+    (`Critical`, `Important`, or `Minor`), `file_line` (path:line string or
+    `null`), `problem`, and `fix`.
 
     Only return PASS when every definition-of-done item has fresh evidence, `commands_run`
     includes the verification commands, and `fix_request` is empty.

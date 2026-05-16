@@ -90,7 +90,7 @@ git diff --stat "$BASE_SHA"..HEAD
 
 `git status --short` must be empty, `rev-list --count` must be at least 1, and the diff must not include planning artifacts unless the user or project explicitly tracks/updates them as part of delivery. If this fails, dispatch a fresh fix sub-agent on the same branch with the integrity failure and require a clean commit before continuing. Use `fix-agent-prompt.md` for fix dispatches.
 
-The implementer result must include the machine-readable YAML block from `implementer-prompt.md` with top-level keys: `status`, `commit_sha`, `commands_run`, `red_green_evidence`, `issues`, and `fix_request`. If the block is missing, malformed, or internally inconsistent, treat it as a protocol failure: re-dispatch the same implementer with the instruction to return a valid YAML block only. Do not count protocol failures against code fix budgets.
+The implementer result must include the machine-readable YAML block from `implementer-prompt.md` with top-level keys: `status`, `commit_sha`, `commands_run`, `red_green_evidence`, `issues`, and `fix_request`. If the block is missing, malformed, or internally inconsistent, treat it as a protocol failure: re-dispatch a fresh implementer-role sub-agent with the instruction to return a valid YAML block only. Do not count protocol failures against code fix budgets.
 
 ### 4b. Check before done
 

@@ -90,13 +90,13 @@ Task tool:
         command: null # exact command string, or null
         exit_code: null # integer, or null
         pass_summary: null # pass summary string, or null
-    issues:
-      - severity: Important # Critical | Important | Minor
-        file_line: null # path:line string, or null
-        problem: "issue or concern"
-        fix: null # recommended fix string, or null
+    issues: [] # issue objects; empty for DONE with no concerns
     fix_request: [] # concrete requests for the controller/fix agent
     ```
+
+    When reporting issues, each item in `issues` must include `severity`
+    (`Critical`, `Important`, or `Minor`), `file_line` (path:line string or
+    `null`), `problem`, and `fix`.
 
     For DONE, `commit_sha` must be non-null, `red_green_evidence.status` must be PRESENT,
     `commands_run` must include the verification command, and `fix_request` must be empty.
