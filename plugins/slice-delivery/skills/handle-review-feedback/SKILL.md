@@ -21,6 +21,12 @@ Work the feedback one item at a time. For each item:
    - **Unclear** → ask; do not guess.
 4. **Fix one item, then verify it.** Run the targeted test for that item before moving to the next. Never batch several fixes into one unverified change.
 
+## What you can push back on
+
+Pushback fits **judgement** calls — a criterion the gate read wrongly, a criterion it marked unproven that the evidence does satisfy, a requirement outside the slice's `## What to build`, a code-quality opinion not in the slice spec.
+
+It does **not** fit objective failures. A red test, a command that exits non-zero, or a missing required command is not a difference of opinion — it is fixed with a code or test change. If you believe a *test* is wrong, correcting the test is still a change, not a pushback. You cannot leave a gate's objective failure in place and call the slice done.
+
 ## Scope discipline
 
 Every fix must trace to a gate item and to the slice's `## What to build`. A "nicer" or "more professional" suggestion that is not in the slice spec is scope creep — push back, do not silently comply. Scope expansion belongs in a new slice, not this fix round.
@@ -29,7 +35,7 @@ Every fix must trace to a gate item and to the slice's `## What to build`. A "ni
 
 For each feedback item: **fixed** (with the commit) or **pushed back** (with evidence). Report both in the fix sub-agent's YAML result - fixes under `commands_run` / `commit_sha`, rejected items under `issues` with the evidence. Set `status: DONE_WITH_CONCERNS` when any item was pushed back, so `run-slices` can adjudicate.
 
-Pushback-only result: if no code changes are required, do not create an empty commit. Return `commit_sha: null`, prove `git status --short` is clean in `commands_run`, put the rejected item evidence under `issues`, and keep `fix_request: []` only when there are no actionable fixes left.
+Pushback-only result: if no code changes are required, make no commit. Return `commit_sha: null` and prove no code changed — `commands_run` must show `git rev-parse HEAD` still equal to the input `Current HEAD` and `git status --short` clean. Put the rejected items and their evidence under `issues`.
 
 ## Red flags — never
 

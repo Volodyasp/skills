@@ -98,15 +98,23 @@ Runs automatically for every slice, in both modes. Invoke the **`check-before-do
 
 Any item fails -> dispatch a fresh fix sub-agent on the same branch with the verifier's report, the slice spec, the current diff, and the fix-round number. Use `fix-agent-prompt.md`. The fix sub-agent applies the **`handle-review-feedback`** discipline: verify each item against the code, push back on wrong or out-of-scope items with evidence, fix one at a time. On the **second** consecutive failure of this gate it applies **`debug-slice-failure`** instead - root cause before any further patch.
 
-Handle the fix result explicitly:
+Handle the fix result. First confirm whether code changed — compare `git rev-parse HEAD` against HEAD before the dispatch; a committed fix means the fix-agent's `commit_sha` is a real new commit.
 
-- If code changed, the fix sub-agent must make a clean commit before any gate is re-run.
-- If every remaining item is a technical pushback (`status: DONE_WITH_CONCERNS`) and no code changed, do not force an empty commit. The orchestrator must adjudicate the evidence first: pass strong pushback evidence into the next gate run as context, or stop and ask the user when uncertain.
-- Re-run `check-before-done` after either a committed fix or accepted pushback context.
+- **Code changed** -> re-run `check-before-done`. The fresh re-run is the gate's independent verdict on the fix.
+- **Pushback only** (`status: DONE_WITH_CONCERNS`, no commit, HEAD unchanged) -> do not re-run the gate; nothing changed, so its verdict would be identical. The orchestrator resolves the dispute itself — never re-run the gate with the fix-agent's argument as context.
 
-Budget: 2 fix rounds. Still failing -> stop and report to the user.
+Adjudicate every pushed-back item yourself:
 
-The verifier result must include the machine-readable YAML block from `verifier-prompt.md` with top-level keys: `status`, `commit_sha`, `commands_run`, `red_green_evidence`, `issues`, and `fix_request`. If the block is missing or malformed, treat it as a protocol failure: re-dispatch the verifier with the instruction to return a valid YAML block only. Do not send malformed verifier output to a fix-agent and do not count it against code fix budgets. If the YAML is valid but says anything other than `status: PASS`, the slice is not accepted.
+- Convincing evidence -> the item is **resolved by pushback**, and stays resolved for the rest of the slice even if a later re-run re-raises it.
+- Unconvincing -> the item is still a **failed gate item**.
+- Pushback is legitimate only for judgement calls — a criterion read wrongly, a criterion marked unproven that the evidence does satisfy, a requirement outside the slice scope. A red test, a non-zero command, or a missing required command cannot be pushed back; that needs a code or test change. Treat such a pushback as unconvincing.
+- Uncertain -> stop and ask the user.
+
+The gate is satisfied when every failed item is either fixed (the re-run confirms it) or resolved by pushback. Otherwise continue the fix loop.
+
+Budget: 2 fix rounds — a pushback-only round counts. Still failing -> stop and report to the user.
+
+The verifier result must include the machine-readable YAML block from `verifier-prompt.md` with top-level keys: `status`, `commit_sha`, `commands_run`, `red_green_evidence`, `issues`, and `fix_request`. If the block is missing or malformed, treat it as a protocol failure: re-dispatch the verifier with the instruction to return a valid YAML block only. Do not send malformed verifier output to a fix-agent and do not count it against code fix budgets. If the YAML is valid but says anything other than `status: PASS`, the gate failed — enter the fix-result handling above.
 
 ### 4c. Slice review
 
@@ -114,15 +122,16 @@ Runs automatically for every slice, in both modes - only after 4b passes. Invoke
 
 Issues -> dispatch a fresh fix sub-agent on the same branch with the review report, the slice spec, the current diff, and the fix-round number. Use `fix-agent-prompt.md`. The fix sub-agent applies the **`handle-review-feedback`** discipline: verify each review item, push back on out-of-scope or wrong comments with evidence instead of complying blindly. On the **second** consecutive failure of this gate it applies **`debug-slice-failure`** instead - root cause before any further patch.
 
-Handle the fix result explicitly:
+Handle the fix result the same way as 4b — first confirm whether code changed:
 
-- If code changed, the fix sub-agent must make a clean commit before any gate is re-run.
-- If every remaining item is a technical pushback (`status: DONE_WITH_CONCERNS`) and no code changed, do not force an empty commit. The orchestrator must adjudicate the evidence first: pass strong pushback evidence into the next review as context, or stop and ask the user when uncertain.
-- Re-run `check-before-done` first after any committed review fix, then re-run `slice-review`. For pushback-only review results, re-run `slice-review` with the pushback evidence; re-run `check-before-done` only if code changed.
+- **Code changed** -> re-run `check-before-done` first (a review fix can break behaviour), then re-run `slice-review`.
+- **Pushback only** (`status: DONE_WITH_CONCERNS`, no commit, HEAD unchanged) -> do not re-run either gate. The orchestrator adjudicates the dispute itself.
 
-Budget: 2 rounds. Still failing -> stop and report to the user.
+Adjudicate every pushed-back review item yourself: convincing evidence -> **resolved by pushback**; unconvincing -> still a **failed gate item**; uncertain -> stop and ask the user. Code-quality feedback is judgement, so a pushback here can be legitimate — but a real bug the reviewer found is not a difference of opinion.
 
-The reviewer result must include the machine-readable YAML block from `reviewer-prompt.md` with top-level keys: `status`, `commit_sha`, `commands_run`, `red_green_evidence`, `issues`, and `fix_request`. If the block is missing or malformed, treat it as a protocol failure: re-dispatch the reviewer with the instruction to return a valid YAML block only. Do not send malformed reviewer output to a fix-agent and do not count it against code fix budgets. If the YAML is valid but says anything other than `status: APPROVED`, the slice is not accepted.
+The gate is satisfied when every review item is either fixed (the re-runs confirm it) or resolved by pushback. Budget: 2 rounds — a pushback-only round counts. Still failing -> stop and report to the user.
+
+The reviewer result must include the machine-readable YAML block from `reviewer-prompt.md` with top-level keys: `status`, `commit_sha`, `commands_run`, `red_green_evidence`, `issues`, and `fix_request`. If the block is missing or malformed, treat it as a protocol failure: re-dispatch the reviewer with the instruction to return a valid YAML block only. Do not send malformed reviewer output to a fix-agent and do not count it against code fix budgets. If the YAML is valid but says anything other than `status: APPROVED`, the gate failed — enter the fix-result handling above.
 
 ### 4d. HITL gate
 
@@ -160,14 +169,15 @@ Use the least powerful model that fits each role. Mechanical slices → a fast m
 - Run a slice on `main` / `master`.
 - Skip `check-before-done` or `slice-review`, or run them in only one mode.
 - Start `slice-review` before `check-before-done` passes.
-- Accept a slice with an open issue from either gate.
+- Accept a slice with an unresolved failed item from either gate — an item resolved by pushback is not unresolved.
 - Trust the implementer's success claim instead of verifying.
 - Dispatch implementer sub-agents for multiple slices in parallel.
 - Make a sub-agent read the PRD or other slice files — construct its context yourself.
 - Carry context from one slice's sub-agent into the next.
-- Continue after a failed review fix without re-running `check-before-done`.
+- Continue after a review fix that changed code without re-running `check-before-done`.
 - Start a slice while `git status --short` is dirty.
 - Patch the same gate a third time instead of escalating to `debug-slice-failure`.
+- Re-run a gate with the fix-agent's pushback argument as context — adjudicate disputes in the orchestrator, keep the gate independent.
 
 ## Notes
 

@@ -14,7 +14,7 @@ This skill finishes a *story*, not a slice. Per-slice acceptance is `check-befor
 ## 1. Confirm preconditions
 
 - The current branch is the story branch — never `main` / `master`.
-- Every slice is accepted. If `run-slices` left slices unfinished, stop and tell the user to finish it first.
+- Every slice is accepted. If `run-slices` passed a slice acceptance report, trust it and confirm no slice is unfinished. If there is no report — `finish-slices` was invoked standalone, or the session was interrupted — ask the user to confirm every slice is done before proceeding; never assume it.
 - `git status --short` is clean. If dirty, stop and ask — uncommitted work must not ride into the delivery decision.
 
 ## 2. Run final verification

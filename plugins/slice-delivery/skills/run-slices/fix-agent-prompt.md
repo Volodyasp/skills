@@ -47,7 +47,9 @@ Task tool:
     restate it, verify it against the code, then fix it or push back with
     `file:line` evidence if it is wrong or outside the slice spec. Fix one item at
     a time and run its targeted test before the next. Set
-    `status: DONE_WITH_CONCERNS` if you push back on any item.
+    `status: DONE_WITH_CONCERNS` if you push back on any item. Pushback fits
+    judgement calls only — a red test or a failing command is fixed with a code
+    or test change, never with an argument.
 
     If `Fix round` is 2 or higher, the previous fix did not hold — switch to the
     `debug-slice-failure` skill. Stop patching: reproduce the failure, find the
@@ -57,13 +59,21 @@ Task tool:
 
     ## Verification
 
-    Run the narrow tests for your fix and the project verification command:
+    If you changed code, run the narrow tests for your fix and the project
+    verification command:
 
     - {TEST_COMMAND}
     - {LINT_BUILD_COMMANDS_OR_NONE}
 
-    Commit your fix on the current story branch using the provided commit format. If no format is provided, use a plain imperative message.
-    Before reporting, `git status --short` must be empty.
+    Commit the fix on the current story branch using the provided commit format,
+    or a plain imperative message if none is given.
+
+    If this is a pushback-only result — you changed no code — make no commit and
+    run no fix verification; instead capture, for each pushed-back item, the
+    code / test / slice-spec evidence that proves your case.
+
+    Before reporting: `git status --short` must be empty, and for a pushback-only
+    result `git rev-parse HEAD` must still equal the input `Current HEAD`.
 
     ## Output Contract
 
@@ -99,10 +109,11 @@ Task tool:
 
     For DONE, `commit_sha` must be non-null, `commands_run` must include the
     verification command, and `fix_request` must be empty. For
-    DONE_WITH_CONCERNS with pushback-only feedback, `commit_sha` may be null only
-    when `git status --short` is empty and no code changed; include the inspected
-    evidence in `commands_run` / `issues`, and leave `fix_request` empty only when
-    no actionable fixes remain. Use `red_green_evidence.status: NOT_APPLICABLE`
-    only when the fix did not need a new failing test; otherwise include
-    RED/GREEN evidence for changed behavior.
+    `DONE_WITH_CONCERNS`, `commit_sha` is non-null when you committed a fix, or
+    null for a pushback-only result — and when it is null, `commands_run` must
+    show `git rev-parse HEAD` still equal to the input `Current HEAD` and
+    `git status --short` empty, proving no code changed. The pushed-back items
+    and their evidence always go under `issues`. Use
+    `red_green_evidence.status: NOT_APPLICABLE` only when the fix did not need a
+    new failing test; otherwise include RED/GREEN evidence for changed behavior.
 ```
