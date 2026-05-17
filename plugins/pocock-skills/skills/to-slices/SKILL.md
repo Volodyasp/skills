@@ -1,11 +1,11 @@
 ---
 name: to-slices
-description: Break a PRD or plan into independently-grabbable vertical-slice tickets as local markdown files under `docs/specs/<slug>/slices/`. Use when user wants to decompose a PRD into vertical slices, tracer-bullet tickets, or implementation work units for local spec-driven workflow.
+description: Break a PRD into independently-grabbable vertical-slice tickets as local markdown files under `docs/specs/<slug>/slices/`. Use when user wants to decompose a PRD into vertical slices, tracer-bullet tickets, or implementation work units for local spec-driven workflow.
 ---
 
 # To Slices
 
-Break a plan into independently-grabbable tickets using **vertical slices** (tracer bullets). Each slice becomes a numbered markdown file under `docs/specs/<slug>/slices/`.
+Break the PRD into independently-grabbable tickets using **vertical slices** (tracer bullets). Each slice becomes a numbered markdown file under `docs/specs/<slug>/slices/`.
 
 This is the second step of the local spec pipeline: `/to-prd → /to-slices → /run-slices → /finish-slices`.
 
@@ -35,7 +35,7 @@ Before drafting slices, map out the modules and files the work will create or mo
 - Files that change together live together. Split by responsibility, not by technical layer.
 - In an existing codebase, follow established patterns — do not unilaterally restructure.
 
-Hold the PRD's `Implementation Decisions` and `Testing Decisions` next to this map — interfaces, contracts, schema, architectural and testing choices. They do not travel on their own: each slice that depends on a decision must carry it (step 7, `## Context & decisions`).
+Hold the PRD's `Implementation Decisions` and `Testing Decisions` next to this map — interfaces, contracts, schema, architectural and testing choices. They do not travel on their own: each slice that depends on a decision must carry it in its `## Context & decisions` section (written in step 7).
 
 ### 4. Draft vertical slices
 
@@ -56,11 +56,10 @@ Before presenting anything, review the draft breakdown with fresh eyes. This is 
 
 1. **Story coverage** — can every user story in the PRD be traced to a slice? List gaps; add slices to close them.
 2. **Dependency order** — does each `Blocked by` point only at lower-numbered slices? No cycles? Do the numbers reflect dependency order?
-3. **Concrete criteria** — is every acceptance criterion checkable? No "works nicely", no "handles edge cases". Rewrite vague ones (see step 7).
-4. **Real layers only** — does each slice cut through layers the change genuinely touches, not invented ones?
-5. **Independently valuable** — is each slice small yet still worth delivering on its own?
+3. **Real layers only** — does each slice cut through layers the change genuinely touches, not invented ones?
+4. **Independently valuable** — is each slice small yet still worth delivering on its own?
 
-Fix issues inline, then proceed.
+Fix issues inline, then proceed. (Acceptance criteria are written and reviewed in step 7.)
 
 ### 6. Quiz the user
 
@@ -103,7 +102,7 @@ Acceptance criteria are the contract `check-before-done` verifies against — ea
 - A criterion a reviewer could not turn into a test is a slice failure — rewrite it.
 </no-placeholders>
 
-Use the slice body template below. Create `docs/specs/<slug>/slices/` if it doesn't exist.
+Use the slice body template below — in `## User stories covered`, `US-<n>` means user story number `<n>` in the PRD's `User Stories` list. Create `docs/specs/<slug>/slices/` if it doesn't exist.
 
 <slice-template>
 
@@ -118,11 +117,15 @@ A concise description of this vertical slice. Describe end-to-end behavior, not 
 
 ## Context & decisions
 
-The implementation and testing decisions this slice depends on — interfaces, API contracts, schema, conventions, architectural choices — copied from the PRD, plus any interface established by an earlier slice this one builds on. Copy them in full. The implementer never reads the PRD or other slice files; a decision that is not in this section does not reach it. Omit the section only if the slice genuinely depends on nothing beyond `What to build`.
+The PRD decisions this slice depends on — interfaces, API contracts, schema, conventions, architectural choices — copied from the PRD's `Implementation Decisions` / `Testing Decisions`. Copy only what this slice needs, but copy it word for word, not paraphrased. The implementer never reads the PRD; a decision that is not in this section does not reach it. Interfaces from earlier slices are NOT copied here — `run-slices` supplies each accepted slice's real, as-built interface at execution time. Omit the section only if the slice genuinely depends on nothing beyond `What to build`.
 
 ## Files
 
-The files this slice creates, modifies, or tests — exact paths where known; for a not-yet-existing module, the path you intend. Mark each `Create` / `Modify` / `Test`.
+The files this slice is expected to touch — best known now, advisory, not binding; the implementer may refine. One per line, marked `Create` / `Modify` / `Test`:
+
+- Create: `path/to/new_module.ext`
+- Modify: `path/to/existing.ext`
+- Test: `path/to/test_file.ext`
 
 ## User stories covered
 
@@ -138,6 +141,14 @@ The files this slice creates, modifies, or tests — exact paths where known; fo
 Anything else relevant — prior art, related ADRs, gotchas. Omit if empty.
 
 </slice-template>
+
+After writing the files, review them with fresh eyes:
+
+1. **Concrete criteria** — every acceptance criterion obeys the `<no-placeholders>` rule above; rewrite any vague one.
+2. **Context carried** — each `## Context & decisions` holds every PRD decision that slice depends on; nothing the implementer would have to guess.
+3. **Files named** — each `## Files` lists the slice's expected touch points.
+
+Fix issues inline.
 
 ### 8. Report
 
