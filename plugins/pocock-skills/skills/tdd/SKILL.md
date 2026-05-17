@@ -115,7 +115,7 @@ Description rules:
 - Describes the behavior, not the activity (`add tiered discount calculation`, not `test+impl tiered discount` or `TDD round 3`)
 - One concrete thing per commit — if you find yourself writing "and", split the cycle
 
-Why this format: cherry-pick by `^Slice N:` extracts a slice's commits onto a fresh branch for PR. The same format applies whether commits were authored by a human or by Ralph during an autonomous run. See `/to-ralph` for the pipeline-side enforcement.
+Why this format: cherry-pick by `^Slice N:` extracts a slice's commits onto a fresh branch for PR. The same format applies whether commits were authored by hand or by `/run-slices` during an autonomous run.
 
 ## Checklist Per Cycle
 

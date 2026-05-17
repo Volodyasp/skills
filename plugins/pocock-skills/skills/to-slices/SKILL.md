@@ -7,7 +7,7 @@ description: Break a PRD or plan into independently-grabbable vertical-slice tic
 
 Break a plan into independently-grabbable tickets using **vertical slices** (tracer bullets). Each slice becomes a numbered markdown file under `docs/specs/<slug>/slices/`.
 
-This is the second step of the local spec pipeline: `/to-prd → /to-slices → /run-slices → /finish-slices` (use `/to-ralph` in place of `/run-slices` to drive the slices through a Ralph autonomous loop instead).
+This is the second step of the local spec pipeline: `/to-prd → /to-slices → /run-slices → /finish-slices`.
 
 A slice file is a **contract**, not a sketch. `/run-slices` hands it to a fresh implementer sub-agent that never reads the PRD or any other slice file — the agent gets only what the slice itself carries. Write each slice so that agent has everything it needs and nothing it must guess.
 
@@ -150,7 +150,7 @@ Wrote N slices to docs/specs/<slug>/slices/:
   003-<slug>.md  (HITL, blockers: #001)
   ...
 
-Next: /run-slices to implement the slices on a story branch (or /to-ralph to convert them into Ralph loop artifacts).
+Next: /run-slices to implement the slices on a story branch.
 ```
 
 Do NOT modify the PRD file. Do NOT re-number existing slice files.
