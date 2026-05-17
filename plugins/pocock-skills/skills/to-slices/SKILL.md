@@ -9,7 +9,7 @@ Break the PRD into independently-grabbable tickets using **vertical slices** (tr
 
 This is the second step of the local spec pipeline: `/to-prd → /to-slices → /run-slices → /finish-slices`.
 
-A slice file is a **contract**, not a sketch. `/run-slices` hands it to a fresh implementer sub-agent that never reads the PRD or any other slice file — the agent gets only what the slice itself carries. Write each slice so that agent has everything it needs and nothing it must guess.
+A slice file is a **contract**, not a sketch. `/run-slices` hands it to a fresh implementer sub-agent that never reads the PRD, ADRs, or other slice files. Write each slice so it carries everything that agent needs — the only context added at run time is the as-built interface of already-accepted slices, which `run-slices` supplies.
 
 ## Process
 
@@ -117,11 +117,11 @@ A concise description of this vertical slice. Describe end-to-end behavior, not 
 
 ## Context & decisions
 
-The PRD decisions this slice depends on — interfaces, API contracts, schema, conventions, architectural choices — copied from the PRD's `Implementation Decisions` / `Testing Decisions`. Copy only what this slice needs, but copy it word for word, not paraphrased. The implementer never reads the PRD; a decision that is not in this section does not reach it. Interfaces from earlier slices are NOT copied here — `run-slices` supplies each accepted slice's real, as-built interface at execution time. Omit the section only if the slice genuinely depends on nothing beyond `What to build`.
+The decisions this slice depends on — interfaces, API contracts, schema, conventions, architectural choices — copied from the PRD's `Implementation Decisions` / `Testing Decisions` and from any ADR or related spec the PRD references. Copy only what this slice needs, but copy it word for word, not paraphrased. The implementer never reads the PRD, ADRs, or other slice files; a decision that is not in this section does not reach it. Interfaces from earlier slices are NOT copied here — `run-slices` supplies each accepted slice's real, as-built interface at execution time. Omit the section only if the slice genuinely depends on nothing beyond `What to build`.
 
 ## Files
 
-The files this slice is expected to touch — best known now, advisory, not binding; the implementer may refine. One per line, marked `Create` / `Modify` / `Test`:
+The files this slice is expected to touch, when the layout is already clear from the step 3 module map — advisory, not binding; the implementer may refine or add. Omit the section when the layout is not yet known; do not invent paths. When listed, one per line, marked `Create` / `Modify` / `Test`:
 
 - Create: `path/to/new_module.ext`
 - Modify: `path/to/existing.ext`
@@ -145,8 +145,7 @@ Anything else relevant — prior art, related ADRs, gotchas. Omit if empty.
 After writing the files, review them with fresh eyes:
 
 1. **Concrete criteria** — every acceptance criterion obeys the `<no-placeholders>` rule above; rewrite any vague one.
-2. **Context carried** — each `## Context & decisions` holds every PRD decision that slice depends on; nothing the implementer would have to guess.
-3. **Files named** — each `## Files` lists the slice's expected touch points.
+2. **Context carried** — each `## Context & decisions` holds every decision that slice depends on; nothing the implementer would have to guess.
 
 Fix issues inline.
 
