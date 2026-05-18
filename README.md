@@ -21,7 +21,7 @@ Most skills here are forks from [mattpocock/skills](https://github.com/mattpococ
 
 | Plugin | Description |
 |---|---|
-| [`pocock-skills`](./plugins/pocock-skills/) | Curated subset of [mattpocock/skills](https://github.com/mattpocock/skills) with local-markdown adaptations. Spec-driven engineering pipeline: `grill-me → to-prd → to-slices`, plus `tdd`, `diagnose`, `zoom-out`, `improve-codebase-architecture`. |
+| [`pocock-skills`](./plugins/pocock-skills/) | Curated subset of [mattpocock/skills](https://github.com/mattpocock/skills) with local-markdown adaptations. Spec-driven engineering pipeline: `grill-me → to-prd → to-slices`, plus `tdd`, `diagnose`, `improve-codebase-architecture`. |
 | [`safety-hooks`](./plugins/safety-hooks/) | `PreToolUse` hooks that block destructive git commands (`push`, `--force`, `reset --hard`, `--no-verify`, etc.) and access to secret files. Per-project whitelist via `.claude/safety-hooks.local.md`. |
 | [`python-quality-hooks`](./plugins/python-quality-hooks/) | `PostToolUse` hooks for Python files. On `Edit`: `ruff` bugs-only check + `mypy`. On `Write`: `ruff` isort-fix + format, then the same checks. Non-blocking — feedback only. |
 
@@ -62,7 +62,6 @@ Pipeline overview:
 
 Utility skills (used independently of the pipeline):
 
-- `/zoom-out` — get a higher-level map of an unfamiliar area
 - `/improve-codebase-architecture` — find deepening opportunities
 - `/tdd` — discipline for red-green-refactor
 

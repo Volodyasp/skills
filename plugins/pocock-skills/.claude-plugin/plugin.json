@@ -1,7 +1,7 @@
 {
   "name": "pocock-skills",
   "version": "0.4.0",
-  "description": "Curated subset of mattpocock/skills with local-markdown adaptations. Pipeline: grill-me → to-prd → to-slices writes to docs/specs/<slug>/. Plus tdd, diagnose, zoom-out, improve-codebase-architecture.",
+  "description": "Curated subset of mattpocock/skills with local-markdown adaptations. Pipeline: grill-me → to-prd → to-slices writes to docs/specs/<slug>/. Plus tdd, diagnose, improve-codebase-architecture.",
   "author": {
     "name": "Vladimir Suponin",
     "email": "suponin.vldmr@gmail.com"
@@ -12,7 +12,6 @@
     "./skills/grill-me",
     "./skills/tdd",
     "./skills/improve-codebase-architecture",
-    "./skills/zoom-out",
     "./skills/to-prd",
     "./skills/to-slices",
     "./skills/diagnose"
