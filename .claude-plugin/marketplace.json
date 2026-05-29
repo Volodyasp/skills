@@ -9,10 +9,10 @@
   },
   "plugins": [
     {
-      "name": "pocock-skills",
-      "description": "Curated subset of mattpocock/skills with local-markdown adaptations: grill-me, tdd, to-prd, to-slices, diagnose, improve-codebase-architecture",
+      "name": "slice-delivery",
+      "description": "Execution half of the local-markdown spec pipeline: runs vertical slices from /to-slices through TDD, two quality gates, disciplined fix rounds, and a finish-slices delivery step.",
       "category": "development",
-      "source": "./plugins/pocock-skills",
+      "source": "./plugins/slice-delivery",
       "homepage": "https://github.com/Volodyasp/skills"
     },
     {
