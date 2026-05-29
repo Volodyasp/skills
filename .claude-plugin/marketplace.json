@@ -9,6 +9,13 @@
   },
   "plugins": [
     {
+      "name": "pocock-skills",
+      "description": "Curated subset of mattpocock/skills, freshly synced from upstream: grill-with-docs, to-prd, to-issues, tdd, diagnose, improve-codebase-architecture, review, handoff, write-a-skill, setup-matt-pocock-skills.",
+      "category": "development",
+      "source": "./plugins/pocock-skills",
+      "homepage": "https://github.com/Volodyasp/skills"
+    },
+    {
       "name": "slice-delivery",
       "description": "Execution half of the local-markdown spec pipeline: runs vertical slices from /to-slices through TDD, two quality gates, disciplined fix rounds, and a finish-slices delivery step.",
       "category": "development",

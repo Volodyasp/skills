@@ -1,0 +1,33 @@
+{
+  "name": "pocock-skills",
+  "version": "0.5.0",
+  "description": "Curated subset of mattpocock/skills, freshly synced verbatim from upstream: grill-with-docs, to-prd, to-issues, tdd, diagnose, improve-codebase-architecture, review, handoff, write-a-skill, setup-matt-pocock-skills. Local adaptations applied separately.",
+  "author": {
+    "name": "Vladimir Suponin",
+    "email": "suponin.vldmr@gmail.com"
+  },
+  "homepage": "https://github.com/Volodyasp/skills",
+  "license": "MIT",
+  "skills": [
+    "./skills/grill-with-docs",
+    "./skills/to-prd",
+    "./skills/to-issues",
+    "./skills/tdd",
+    "./skills/diagnose",
+    "./skills/improve-codebase-architecture",
+    "./skills/review",
+    "./skills/handoff",
+    "./skills/write-a-skill",
+    "./skills/setup-matt-pocock-skills"
+  ],
+  "keywords": [
+    "claude-code",
+    "skills",
+    "tdd",
+    "spec-driven",
+    "prd",
+    "agentic-workflow",
+    "vertical-slice",
+    "pocock"
+  ]
+}
