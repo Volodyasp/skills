@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Resolves its own real path so it works when invoked through a symlink.
+self="$(readlink -f "$0" 2>/dev/null)" || self="$0"
+here="$(cd "$(dirname "$self")" && pwd)"
+exec python3 "$here/../skills/review-cycle/scripts/state.py" "$@"

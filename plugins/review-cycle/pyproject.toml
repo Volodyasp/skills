@@ -1,0 +1,23 @@
+# Test commands (run in this directory):
+#   uv run --with pytest --with pytest-cov python -m pytest tests/ -v --cov=review_cycle --cov-report=term-missing
+#   uv run --with ruff ruff check . && uv run --with ruff ruff format --check . && mypy .
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["F", "B", "E9", "E71", "S", "ASYNC", "DTZ", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S603", "S607", "S108"]
+"skills/review-cycle/scripts/review_cycle/gitio.py" = ["S603", "S607"]
+
+[tool.mypy]
+ignore_missing_imports = true
+follow_imports = "silent"
+mypy_path = "skills/review-cycle/scripts"
+files = ["skills/review-cycle/scripts", "tests"]
+
+[tool.pytest.ini_options]
+pythonpath = ["skills/review-cycle/scripts"]
+markers = ["slow: performance checks on large synthetic repos"]
