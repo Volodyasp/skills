@@ -1,0 +1,9 @@
+review-cycle · round 3 · high · since 04bc916 · 9 agents
+0 needs your decision · 1 agent can fix · 0 Nit · 0 Pre-existing · 0 rejected
+
+Agent can fix
+ F2  src/billing/tax.ts:12 · rounding uses float (class: float rounding)
+
+Rule suggestion: "float rounding" marked wrong 3× in this repo. A REVIEW.md line such as: Do not report float rounding.
+
+Details: /review-cycle show F2 (or ask in this session)

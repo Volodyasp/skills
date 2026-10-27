@@ -1,0 +1,19 @@
+review-cycle · round 1 · xhigh · vs origin/main@abcdef1 · 12 agents
+2 needs your decision · 0 agent can fix · 0 Nit · 0 Pre-existing · 0 rejected · 1 Uncertain
+
+Needs your decision
+ F7  src/p.py:5 · rounding mode changes for refunds (uncertain)
+     Trigger:  refund of 10.005
+     Evidence: p.py:5 uses ROUND_HALF_UP
+     Why you:  the fix changes ROUND_HALF_UP → ROUND_HALF_EVEN
+     Options:  mark intentional
+ F9  src/q.py:8 · second charge is sent on retry
+     Trigger:  gateway timeout then retry
+     Evidence: q.py:8 retries without a key
+     Why you:  contradicts stated intent: “never charge twice”
+     Options:  mark intentional
+
+Uncertain (1)
+ F8  src/r.py:3 · cache may serve stale rows
+
+Details: /review-cycle show F7 (or ask in this session)

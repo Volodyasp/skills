@@ -1,0 +1,10 @@
+review-cycle · round 1 · low · doc docs/spec.md · 4 agents
+0 needs your decision · 1 agent can fix · 0 Nit · 1 Out of scope · 0 rejected
+
+Agent can fix
+ F1  docs/spec.md:12 · section Limits contradicts section Quotas (class: contradiction)
+
+Out of scope (1)
+ F2  docs/spec.md:40 · term used before it is defined
+
+Details: /review-cycle show F1 (or ask in this session)
