@@ -1,0 +1,8 @@
+No code change since round 1 — not a new round.
+review-cycle · round 1 · high · vs origin/main@abcdef1 · 9 agents
+0 needs your decision · 1 agent can fix · 0 Nit · 0 Pre-existing · 0 rejected
+
+Agent can fix
+ F4  src/billing/charge.ts:142 · retry after a timeout charges twice (class: retries without idempotency key)
+
+Details: /review-cycle show F4 (or ask in this session)

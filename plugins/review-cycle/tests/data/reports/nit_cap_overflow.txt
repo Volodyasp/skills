@@ -1,0 +1,11 @@
+review-cycle · round 2 · medium · since 04bc916 · 5 agents
+0 needs your decision · 0 agent can fix · 4 Nit · 0 Pre-existing · 0 rejected
+not shown: 2 nits over the cap
+
+Nothing to fix.
+
+Nit (2)
+ F4  src/b.py:7 · claim four
+ F3  src/z.py:1 · claim three
+
+Details: /review-cycle show F4 (or ask in this session)

@@ -24,6 +24,7 @@ Most skills here are forks from [mattpocock/skills](https://github.com/mattpococ
 | [`pocock-skills`](./plugins/pocock-skills/) | Curated subset of [mattpocock/skills](https://github.com/mattpocock/skills) with local-markdown adaptations. Spec-driven engineering pipeline: `grill-me → to-prd → to-slices`, plus `tdd`, `diagnose`, `zoom-out`, `improve-codebase-architecture`. |
 | [`safety-hooks`](./plugins/safety-hooks/) | `PreToolUse` hooks that block destructive git commands (`push`, `--force`, `reset --hard`, `--no-verify`, etc.) and access to secret files. Per-project whitelist via `.claude/safety-hooks.local.md`. |
 | [`python-quality-hooks`](./plugins/python-quality-hooks/) | `PostToolUse` hooks for Python files. On `Edit`: `ruff` bugs-only check + `mypy`. On `Write`: `ruff` isort-fix + format, then the same checks. Non-blocking — feedback only. |
+| [`review-cycle`](./plugins/review-cycle/) | Multi-round review of a branch or a Markdown plan: parallel finders, blind verifiers that vote, state between rounds, short CLI report. Fixes only when you ask, then an incremental re-review. Needs dynamic workflows and Python 3.10+. |
 
 More plugins to come (personal authored skills, additional curated forks).
 
@@ -41,6 +42,7 @@ Then install the plugins you want:
 claude plugin install pocock-skills@skills
 claude plugin install safety-hooks@skills
 claude plugin install python-quality-hooks@skills
+claude plugin install review-cycle@skills
 ```
 
 Restart Claude Code after install.

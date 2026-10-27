@@ -1,0 +1,17 @@
+{
+  "name": "review-cycle",
+  "version": "0.1.0",
+  "description": "Multi-round code and document review: parallel finders, blind verifiers, tie-break and sweep via a Workflow script, with durable per-branch state and rendered reports.",
+  "author": {
+    "name": "Vladimir Suponin",
+    "email": "suponin.vldmr@gmail.com"
+  },
+  "homepage": "https://github.com/Volodyasp/skills",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "review",
+    "code-review",
+    "workflow"
+  ]
+}

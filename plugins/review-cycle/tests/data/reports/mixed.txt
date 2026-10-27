@@ -1,0 +1,24 @@
+review-cycle · round 2 · high · since 04bc916 · 9 agents
+1 needs your decision · 2 agent can fix · 3 Nit · 1 Pre-existing · 6 rejected
+Closed since round 1: F1, F2 (fixed) · not shown: 2 outside this re-review
+
+Needs your decision
+ F7  src/billing/refund.ts:58 · refund of a partly paid order returns the full sum
+     Trigger:  order paid 30 of 100, user cancels → refund 100
+     Evidence: refund.ts:58 takes order.total, not the paid sum (refund.ts:41)
+     Why you:  fix options differ in behaviour
+     Options:  refund the paid sum · refuse partial refunds · mark intentional
+
+Agent can fix
+ F5  src/billing/charge.ts:90 · save is not awaited (class: missing await)
+ F4  src/billing/charge.ts:142 · retry after a timeout charges twice (class: retries without idempotency key)
+
+Nit (3)
+ F10 src/a.ts:3 · unused import
+ F12 src/b.ts:2 · typo in log message
+ F11 src/b.ts:9 · magic number
+
+Pre-existing (1)
+ F13 src/billing/tax.ts:12 · rounding uses float
+
+Details: /review-cycle show F7 (or ask in this session)

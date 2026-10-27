@@ -28,6 +28,13 @@
       "category": "development",
       "source": "./plugins/python-quality-hooks",
       "homepage": "https://github.com/Volodyasp/skills"
+    },
+    {
+      "name": "review-cycle",
+      "description": "Multi-round review of a branch or a Markdown plan: parallel finders, blind verifiers with votes, state between rounds, short CLI report. Fixes only on request.",
+      "category": "development",
+      "source": "./plugins/review-cycle",
+      "homepage": "https://github.com/Volodyasp/skills"
     }
   ]
 }
