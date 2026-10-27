@@ -5,3 +5,6 @@ __pycache__/
 .venv/
 uv.lock
 .DS_Store
+.coverage
+.mypy_cache/
+agents/TEMP/
