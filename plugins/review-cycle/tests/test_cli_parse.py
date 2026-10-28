@@ -244,6 +244,41 @@ def test_cli4_invalid_range_sides(token: str) -> None:
         parse_tokens([token])
 
 
+# --- RPT-21 range ref relative suffixes ----------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("token", "ref"),
+    [
+        ("HEAD~3...HEAD", "HEAD~3"),
+        ("HEAD^...HEAD", "HEAD^"),
+        ("main~2^2...HEAD", "main~2^2"),
+        ("HEAD~1...HEAD", "HEAD~1"),
+        ("HEAD...HEAD", "HEAD"),
+    ],
+)
+def test_rpt21_range_ref_accepts_relative_suffixes(token: str, ref: str) -> None:
+    req = plan_of([token])
+    assert (req.target_kind, req.target) == ("range", ref)
+
+
+@pytest.mark.parametrize(
+    "token",
+    ["HEAD@{1}...HEAD", "a:b...HEAD", "-x~1...HEAD", "a..b~1...HEAD", "HEAD{0}...HEAD"],
+)
+def test_rpt21_range_ref_rejects_at_brace_colon_dash_dotdot(token: str) -> None:
+    with pytest.raises(UsageError):
+        parse_tokens([token])
+
+
+def test_rpt21_range_right_side_rule_is_unchanged() -> None:
+    """RPT-21: only `ref` grows new syntax; `right` keeps the old NAME rule."""
+    with pytest.raises(UsageError):
+        parse_tokens(["HEAD~1...-x"])
+    with pytest.raises(UsageError):
+        parse_tokens(["HEAD~1...a..b"])
+
+
 # --- CLI-5 level (parse side) -------------------------------------------------------------------
 
 

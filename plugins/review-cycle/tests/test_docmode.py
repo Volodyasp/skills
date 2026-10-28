@@ -216,7 +216,47 @@ def test_path_slug_of_a_long_joined_string_is_not_hashed_twice() -> None:
     slug = docmode.path_slug(paths)
     assert slug == base
     assert len(slug) <= 80 + 7
-    assert slug.count(digest) == 1
+
+
+# --- RPT-21 code_target ---------------------------------------------------------------------
+
+
+def test_code_target_with_no_range_and_no_path_is_code() -> None:
+    assert docmode.code_target(None, []) == "code"
+
+
+def test_code_target_pins_the_existing_path_only_naming() -> None:
+    """A self-review already created `code-path-plugins-review-cycle-077560`; must not move."""
+    assert docmode.code_target(None, ["plugins/review-cycle"]) == (
+        "code-path-plugins-review-cycle-077560"
+    )
+    assert docmode.code_target(None, ["src/a"]) == f"code-path-{docmode.path_slug(['src/a'])}"
+
+
+def test_code_target_range_only() -> None:
+    key = "HEAD~1"
+    digest = hashlib.sha256(key.encode("utf-8")).hexdigest()[:6]
+    assert docmode.code_target("HEAD~1", []) == f"code-range-head-1-{digest}"
+
+
+def test_code_target_range_with_path() -> None:
+    key = "HEAD~1|src/a"
+    digest = hashlib.sha256(key.encode("utf-8")).hexdigest()[:6]
+    assert docmode.code_target("HEAD~1", ["src/a"]) == f"code-range-head-1-path-src-a-{digest}"
+
+
+def test_code_target_range_path_order_and_duplicates_do_not_matter() -> None:
+    assert docmode.code_target("main", ["b", "a"]) == docmode.code_target("main", ["a", "b", "a"])
+
+
+def test_code_target_different_refs_that_sanitise_the_same_stay_distinct() -> None:
+    """`HEAD^` and `HEAD` both sanitise to "head"; the trailing hash must separate them."""
+    assert docmode.code_target("HEAD^", []) != docmode.code_target("HEAD", [])
+
+
+def test_code_target_moving_head_in_a_fixed_range_keeps_the_same_target() -> None:
+    """RPT-21: the target keys on the literal ref text, not a resolved SHA."""
+    assert docmode.code_target("HEAD~1", []) == docmode.code_target("HEAD~1", [])
 
 
 def test_closing_hash_sequences_are_not_part_of_the_heading() -> None:

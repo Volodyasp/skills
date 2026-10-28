@@ -95,3 +95,29 @@ def path_slug(paths: Iterable[str]) -> str:
     slug = doc_slug(joined)
     digest = hashlib.sha256(joined.encode("utf-8")).hexdigest()[:6]
     return slug if slug.endswith(f"-{digest}") else f"{slug}-{digest}"
+
+
+def code_target(range_ref: str | None, paths: Iterable[str]) -> str:
+    """Return the code-mode state target name (RND-18; RPT-19/20 path target; RPT-21 range).
+
+    - No range, no `--path`: `"code"`.
+    - No range, with `--path`: `"code-path-<path_slug(paths)>"` (RPT-19/20, unchanged).
+    - A range target (`range_ref` is the typed left-hand ref, e.g. `"HEAD~1"`), with or without
+      `--path`: `"code-range-<doc_slug(range_ref)>"` plus `"-path-<doc_slug(joined paths)>"`
+      when `--path` is also given, plus one trailing `"-<sha256(key)[:6]>"` covering the whole
+      name (`key` = `range_ref`, or `"<range_ref>|<joined paths>"` with `--path`). The single
+      trailing hash is what actually tells two targets apart: `doc_slug` alone can sanitise
+      different refs (e.g. `HEAD` and `HEAD^`) to the same text.
+
+    A range target keys on the literal ref text, not a resolved SHA, so the same typed range
+    (e.g. `HEAD~1...HEAD`) keeps the same target as `HEAD` moves (RPT-21).
+    """
+    if range_ref is None:
+        return f"code-path-{path_slug(paths)}" if paths else "code"
+    joined = "+".join(sorted(set(paths)))
+    key = f"{range_ref}|{joined}" if joined else range_ref
+    name = f"code-range-{doc_slug(range_ref)}"
+    if joined:
+        name += f"-path-{doc_slug(joined)}"
+    digest = hashlib.sha256(key.encode("utf-8")).hexdigest()[:6]
+    return f"{name}-{digest}"

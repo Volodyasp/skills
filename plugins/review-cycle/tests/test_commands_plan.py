@@ -29,6 +29,7 @@ from helpers_git import (
     set_remote_ref,
     snap,
 )
+from review_cycle import docmode
 from review_cycle.commands import _count
 
 ST1_KEYS = {
@@ -455,7 +456,9 @@ def test_diff_cmd_prints_the_branchs_own_diff_of_the_scope_files(rc: Rc) -> None
 def base_of(rc: Rc, *tokens: str) -> str:
     out = rc.cli("high", *tokens)
     assert out.code == 0, out.err
-    plan = rc.plan_json()
+    # Not `rc.plan_json()`: an explicit range target plans under its own `code-range-...`
+    # state dir (RPT-21), not the default "code" one `rc.plan_json()` reads.
+    plan = json.loads((Path(out.get("state")) / "plan.json").read_text(encoding="utf-8"))
     assert out.get("base") == f"{plan['base_ref']} ({plan['base_reason']})"
     return out.get("base")
 
@@ -547,7 +550,9 @@ def test_range_target_sets_the_base(rc: Rc, target: str) -> None:
     seed_branch(rc.repo)
     rc.repo.run("branch", "release", "main")
     assert base_of(rc, target) == "release (range target)"
-    assert rc.plan_json()["target"] == "code"
+    assert rc.plan_json(docmode.code_target("release", []))["target"] == docmode.code_target(
+        "release", []
+    )
 
 
 def test_range_target_beats_the_pr_base_but_intent_still_uses_the_pr(rc: Rc) -> None:
@@ -557,7 +562,10 @@ def test_range_target_beats_the_pr_base_but_intent_still_uses_the_pr(rc: Rc) -> 
     set_remote_ref(rc.repo, "origin/develop")
     fake_gh(rc.gh_dir, stdout=pr_json("develop", 12, "feature/seed", "Why: idempotency"))
     assert base_of(rc, "release...HEAD") == "release (range target)"
-    assert ("pr", "#12") in {(s["kind"], s["ref"]) for s in rc.plan_json()["intent"]["sources"]}
+    target = docmode.code_target("release", [])
+    assert ("pr", "#12") in {
+        (s["kind"], s["ref"]) for s in rc.plan_json(target)["intent"]["sources"]
+    }
 
 
 def test_range_with_another_right_side_asks_for_a_checkout(rc: Rc) -> None:

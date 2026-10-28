@@ -17,6 +17,7 @@ _TARGET_NAME = re.compile(r"[a-z0-9][a-z0-9.-]*")
 _MARK_VERBS = ("intentional", "wontfix", "wrong", "superseded", "open", "fix")
 _MODEL_ALIAS = re.compile(r"[A-Za-z0-9._\[\]-]{1,64}")
 _NAME = re.compile(r"(?!-)(?!.*\.\.)[A-Za-z0-9._/-]{1,200}")
+_RANGE_REF = re.compile(r"(?!-)(?!.*\.\.)[A-Za-z0-9._/-]{1,200}(?:[~^][0-9]{0,4})*")
 _PR = re.compile(r"#?([0-9]+)")
 _FOCUS_MAX = 500
 _MAX_PATHS = 10
@@ -117,6 +118,14 @@ def _check_name(name: str) -> str:
     return name
 
 
+def _check_range_ref(name: str) -> str:
+    """Validate a range target's left-hand ref (CLI-4, RPT-21): `NAME` plus any number of
+    trailing git relative suffixes (`~<n>`, `^<n>`), e.g. `HEAD~3`, `main~2^2`."""
+    if not _RANGE_REF.fullmatch(name):
+        raise UsageError(f"invalid target {name!r}")
+    return name
+
+
 def _classify_target(
     token: str,
 ) -> tuple[TargetKind, str, str | None]:
@@ -125,7 +134,7 @@ def _classify_target(
         return "document", token, None
     if "..." in token:
         ref, _, right = token.partition("...")
-        return "range", _check_name(ref), _check_name(right) if right else None
+        return "range", _check_range_ref(ref), _check_name(right) if right else None
     pr = _PR.fullmatch(token)
     if pr:
         return "pr", pr.group(1), None

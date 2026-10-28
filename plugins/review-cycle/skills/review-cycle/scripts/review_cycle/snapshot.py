@@ -164,7 +164,8 @@ def code_snapshot(req: PlanReq, repo: Path, cwd: Path, branch: str) -> Snapshot:
     if paths:
         ids = {p: v for p, v in ids.items() if _under_any(p, paths)}
         counts = {p: v for p, v in counts.items() if p in ids}
-    target = f"code-path-{docmode.path_slug(paths)}" if paths else "code"
+    range_ref = req.target if req.target_kind == "range" else None
+    target = docmode.code_target(range_ref, paths)
     return Snapshot(
         mode="code",
         target=target,
