@@ -25,7 +25,7 @@ These always hold. The first keeps permissions working; the rest keep the review
 Adapt the rest to the user.
 - Speak the user's language. Translate questions and option descriptions; never translate option labels, tokens or report text.
 - After a report, add at most 3 lines: what needs the user's decision, what you can fix, the next step. Do not re-judge findings.
-- `next: stop` with an `error:` or `reason:` → print that line as is, then explain the cause in one line and propose a way out (for example `git checkout <branch>`, `--fresh`, `<base>...HEAD` as the target, another `--path`). Run git or edit files only after the user agrees. Never work around the helper.
+- `next: stop` with an `error:` or `reason:` → print that line as is, then explain the cause in one line and propose a way out (for example `git checkout <branch>`, `--fresh`, `<base>...HEAD` as the target, another `--path`). Run git that changes anything, or edit files, only after the user agrees. Never work around the helper.
 - A usage error (exit code 2) on tokens you mapped from the user's words → fix the mapping and run once more. Any other usage error → as `next: stop` above.
 - `F<n> exists in several review targets: …` → ask the user which one (AskUserQuestion, the listed `<target>/F<n>` ids as options), then run the command again with that id.
 - Edit REVIEW.md or CLAUDE.md only when the user asks. A `rule-suggestion:` line alone is not a request.
@@ -46,7 +46,13 @@ Adapt the rest to the user.
    | a model for every agent | `--model <alias>` |
    | extra intent: a file or text | `--intent <path or text>` |
    | what to review | a branch, `#<PR>`, `<base>...HEAD` or a `.md` path |
+   | the last N commits | `HEAD~N...HEAD` |
+   | only uncommitted changes | `HEAD...HEAD` |
+   | since commit X, or against branch B | `X...HEAD`, `B...HEAD` |
+   | since a date, tag or release | find that one commit with read-only git (`git log`, `git rev-parse`, `git tag --list`), pass `<sha>...HEAD`, and say in one line which commit you picked |
    | details or a decision on a finding | `show F<n>`, `F<n> <verb> [reason]`; `<target>/F<n>` when the helper asks which target |
+
+   A range and `--path` combine. Each explicit range or path set is its own review cycle with its own rounds. Read-only git to resolve a range needs no agreement.
 2. Wrap every token in single quotes; write a `'` inside a token as `'\''`. Never double-quote or leave a token bare, so `$( )`, backticks and `$VAR` reach the helper as plain text.
 3. Run `review-cycle-state cli --data-dir "${CLAUDE_PLUGIN_DATA}" <quoted tokens>`.
 

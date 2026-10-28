@@ -49,7 +49,7 @@ Skill(review-cycle:review-cycle)
 /review-cycle F7 intentional "reason"
 ```
 
-You can also ask in plain words, in any language: "run review-cycle at high on the whole branch". Claude maps what you said to these flags and passes nothing you did not say.
+You can also ask in plain words, in any language: "run review-cycle at high on the whole branch", "review only src/auth", "review the last 3 commits", "only what I have not committed", "everything since the v1.2 tag". Claude maps what you said to these flags and targets and passes nothing you did not say. For a date or a tag it finds the commit with read-only git and tells you which one it picked. Each explicit range or path set is its own review cycle with its own rounds.
 
 When the level is missing, or the scope is missing from round 2 on, the skill asks before it starts. Each option shows how many agents it would run, and the recommended one comes first:
 
@@ -77,7 +77,8 @@ Targets:
 | none | code | the current branch against its base |
 | a branch name | code | that branch; it must be checked out |
 | `#N` or `N` | code | pull request N; it must be the checked-out branch; needs `gh` |
-| `<base>...HEAD` | code | the current branch against `<base>` (any local ref) |
+| `<base>...HEAD` | code | the current branch against `<base>` (any local ref, relative forms such as `HEAD~3` included) |
+| `HEAD...HEAD` | code | only uncommitted changes |
 | `path/to/file.md` | document | that Markdown file, inside the repo |
 
 ### Show and decide
@@ -208,7 +209,7 @@ agents/TEMP/<branch-dir>/review-cycle/<target>/
 ```
 
 - `<branch-dir>` is the branch name without the part up to the first `/`.
-- `<target>` is `code`, `doc-<slug of the path>`, or `code-path-<slug of the paths>-<short hash>` for a `--path` review.
+- `<target>` is `code`, `doc-<slug of the path>`, `code-path-<slug of the paths>-<short hash>` for a `--path` review, or `code-range-<slug of the base>[-path-<slug>]-<short hash>` for an explicit range such as `HEAD~3...HEAD`.
 - Files: `plan.json`, `state.json`, `round-N.md` (every finding in full, plus a hand-off block for the coding flow), `verify/` (the only files verifiers may read), and a `.gitignore` containing `*`.
 - Only `review-cycle-state` writes these files.
 
