@@ -1,0 +1,19 @@
+{
+  "name": "skills",
+  "owner": {
+    "name": "Vladimir Suponin",
+    "email": "suponin.vldmr@gmail.com"
+  },
+  "metadata": {
+    "description": "Cursor install of review-cycle: multi-round review with blind verifiers.",
+    "pluginRoot": "plugins"
+  },
+  "plugins": [
+    {
+      "name": "review-cycle",
+      "source": "review-cycle",
+      "description": "Multi-round review of a branch or a Markdown plan: parallel finders, blind verifiers with votes, state between rounds, short report. Fixes only on request.",
+      "category": "developer-tools"
+    }
+  ]
+}

@@ -435,6 +435,25 @@ def test_rules_files_are_listed_when_they_exist(rc: Rc) -> None:
     ]
 
 
+def test_cursor_rules_are_listed_after_the_root_files(rc: Rc) -> None:
+    """Cursor rules under .cursor/rules join the root rule files, sorted."""
+    rc.repo.commit(
+        {
+            "CLAUDE.md": "rules\n",
+            ".cursor/rules/b.mdc": "b\n",
+            ".cursor/rules/nested/a.md": "a\n",
+        },
+        "cursor rules",
+    )
+    seed_branch(rc.repo)
+    rc.cli("high")
+    assert rc.plan_json()["rules_files"] == [
+        str(rc.root / "CLAUDE.md"),
+        str(rc.root / ".cursor" / "rules" / "b.mdc"),
+        str(rc.root / ".cursor" / "rules" / "nested" / "a.md"),
+    ]
+
+
 def test_diff_cmd_prints_the_branchs_own_diff_of_the_scope_files(rc: Rc) -> None:
     """RND-10/RPT-14: `git -c core.quotepath=false diff <merge_base> <tree_sha> -- <files>`."""
     seed_branch(rc.repo)

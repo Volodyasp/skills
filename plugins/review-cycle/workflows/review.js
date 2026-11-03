@@ -339,6 +339,42 @@ function finderPrompt(a, finder) {
   return lines.join("\n");
 }
 
+function absorbFinderReply(reply, finder, finderOrdinal, mode, seen) {
+  const notes = [];
+  const candidates = [];
+  const dropped = [];
+  if (!reply || !Array.isArray(reply.findings)) {
+    notes.push(`finder ${finderOrdinal} (${finder.lens}) returned nothing usable`);
+    return { candidates, dropped, notes, nullReply: true };
+  }
+  let kept = 0;
+  reply.findings.forEach((raw, k) => {
+    if (!raw || typeof raw !== "object") {
+      notes.push(`finder ${finderOrdinal} item ${k + 1} is not an object; dropped`);
+      return;
+    }
+    const candidate = toCandidate(raw, `N${finderOrdinal}.${kept + 1}`, finder.lens, finderOrdinal, "");
+    const problem = itemProblem(candidate, mode);
+    if (problem) {
+      notes.push(`finder ${finderOrdinal} item ${k + 1} dropped: ${problem}`);
+      return;
+    }
+    kept += 1;
+    const id = candidate.id;
+    if (mode === "code") {
+      const key = dedupKey(candidate);
+      if (seen.has(key)) {
+        dropped.push({ id, dup_of: seen.get(key) });
+        notes.push(`${id} dropped as duplicate of ${seen.get(key)}`);
+        return;
+      }
+      seen.set(key, id);
+    }
+    candidates.push(candidate);
+  });
+  return { candidates, dropped, notes, nullReply: false };
+}
+
 async function runFinders(a) {
   const replies = await parallel(a.finders.map((finder, i) => () => {
     const label = `find:${finder.lens}${finder.order === "reverse" ? ":rev" : ""}`;
@@ -349,37 +385,11 @@ async function runFinders(a) {
   const dropped = [];
   const seen = new Map();
   replies.forEach((reply, i) => {
-    const finder = a.finders[i];
-    if (!reply || !Array.isArray(reply.findings)) {
-      stats.finders_null += 1;
-      note(`finder ${i + 1} (${finder.lens}) returned nothing usable`);
-      return;
-    }
-    let kept = 0;
-    reply.findings.forEach((raw, k) => {
-      if (!raw || typeof raw !== "object") {
-        note(`finder ${i + 1} item ${k + 1} is not an object; dropped`);
-        return;
-      }
-      const candidate = toCandidate(raw, `N${i + 1}.${kept + 1}`, finder.lens, i + 1, "");
-      const problem = itemProblem(candidate, a.mode);
-      if (problem) {
-        note(`finder ${i + 1} item ${k + 1} dropped: ${problem}`);
-        return;
-      }
-      kept += 1;
-      const id = candidate.id;
-      if (a.mode === "code") {
-        const key = dedupKey(candidate);
-        if (seen.has(key)) {
-          dropped.push({ id, dup_of: seen.get(key) });
-          note(`${id} dropped as duplicate of ${seen.get(key)}`);
-          return;
-        }
-        seen.set(key, id);
-      }
-      candidates.push(candidate);
-    });
+    const absorbed = absorbFinderReply(reply, a.finders[i], i + 1, a.mode, seen);
+    if (absorbed.nullReply) stats.finders_null += 1;
+    absorbed.notes.forEach(note);
+    candidates.push(...absorbed.candidates);
+    dropped.push(...absorbed.dropped);
   });
   return { candidates, dropped };
 }
@@ -472,31 +482,43 @@ function normaliseVerdict(row, task, item) {
   };
 }
 
-/** Moves one agent's reply into `verdicts`; every expected row not returned goes to `missing`. */
-function collect(task, reply, verdicts, missing) {
+/** One verifier reply, without touching the round's stats. `task` needs role, slot, model, batch, items, label. */
+function absorbVerdictReply(task, reply) {
+  const notes = [];
+  const verdicts = [];
+  const missing = [];
   const byId = new Map(task.items.map((it) => [it.id, it]));
   const seen = new Set();
   if (reply && Array.isArray(reply.verdicts)) {
     for (const row of reply.verdicts) {
       const id = row && row.item_id;
       if (!byId.has(id)) {
-        note(`${task.label}: verdict for ${text(id)} is not in this batch; dropped`);
+        notes.push(`${task.label}: verdict for ${text(id)} is not in this batch; dropped`);
       } else if (seen.has(id)) {
-        note(`${task.label}: duplicate verdict for ${id}; first kept`);
+        notes.push(`${task.label}: duplicate verdict for ${id}; first kept`);
       } else {
         seen.add(id);
         verdicts.push(normaliseVerdict(row, task, byId.get(id)));
       }
     }
   } else {
-    stats.verifiers_null += 1;
-    note(`${task.label} returned nothing usable`);
+    notes.push(`${task.label} returned nothing usable`);
   }
   for (const it of task.items) {
     if (seen.has(it.id)) continue;
-    if (reply && Array.isArray(reply.verdicts)) note(`${task.label}: no verdict for ${it.id}`);
+    if (reply && Array.isArray(reply.verdicts)) notes.push(`${task.label}: no verdict for ${it.id}`);
     missing.push({ item_id: it.id, role: task.role, slot: task.slot });
   }
+  return { verdicts, missing, notes, nullReply: !(reply && Array.isArray(reply.verdicts)) };
+}
+
+/** Moves one agent's reply into `verdicts`; every expected row not returned goes to `missing`. */
+function collect(task, reply, verdicts, missing) {
+  const absorbed = absorbVerdictReply(task, reply);
+  if (absorbed.nullReply) stats.verifiers_null += 1;
+  absorbed.notes.forEach(note);
+  verdicts.push(...absorbed.verdicts);
+  missing.push(...absorbed.missing);
 }
 
 async function runTasks(a, tasks, phaseName, verdicts, missing) {
@@ -576,36 +598,43 @@ async function runSweep(a, candidates, verdicts) {
   } catch {
     reply = null;
   }
-  if (!reply || !Array.isArray(reply.findings)) {
-    note("sweep agent returned nothing usable");
-    return { hits: [], dropped: [] };
-  }
   const seen = new Map(candidates.map((c) => [dedupKey(c), c.id]));
+  const absorbed = absorbSweepReply(reply, a.mode, seen);
+  absorbed.notes.forEach(note);
+  return { hits: absorbed.hits, dropped: absorbed.dropped };
+}
+
+function absorbSweepReply(reply, mode, seen) {
+  const notes = [];
   const hits = [];
   const dropped = [];
+  if (!reply || !Array.isArray(reply.findings)) {
+    notes.push("sweep agent returned nothing usable");
+    return { hits, dropped, notes, nullReply: true };
+  }
   reply.findings.forEach((raw, k) => {
     if (!raw || typeof raw !== "object") {
-      note(`sweep item ${k + 1} is not an object; dropped`);
+      notes.push(`sweep item ${k + 1} is not an object; dropped`);
       return;
     }
     const probe = toCandidate(raw, "", "sweep", 0, str(raw.of_class));
-    const problem = itemProblem(probe, a.mode);
+    const problem = itemProblem(probe, mode);
     if (problem) {
-      note(`sweep item ${k + 1} dropped: ${problem}`);
+      notes.push(`sweep item ${k + 1} dropped: ${problem}`);
       return;
     }
     const key = dedupKey(probe);
     if (seen.has(key)) {
       const id = `SD${k + 1}`;
       dropped.push({ id, dup_of: seen.get(key) });
-      note(`sweep item ${id} dropped as duplicate of ${seen.get(key)}`);
+      notes.push(`sweep item ${id} dropped as duplicate of ${seen.get(key)}`);
       return;
     }
     probe.id = `S${hits.length + 1}`;
     seen.set(key, probe.id);
     hits.push(probe);
   });
-  return { hits, dropped };
+  return { hits, dropped, notes, nullReply: false };
 }
 
 // --- Round --------------------------------------------------------------------------------
@@ -676,6 +705,7 @@ async function runRound(a) {
   return result;
 }
 
+// --- entry ---
 const parsed = parseArgs(args);
 if (!parsed.args) return notStarted(parsed.reason, NEXT_RUN_SKILL);
 if (!parsed.args.model_override) {

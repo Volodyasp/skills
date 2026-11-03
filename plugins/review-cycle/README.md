@@ -41,6 +41,14 @@ When Claude starts the skill itself, because you asked in a message instead of t
 Skill(review-cycle:review-cycle)
 ```
 
+## Cursor
+
+Same plugin, second entry. Claude keeps `skills/review-cycle/SKILL.md` and the Workflow script. Cursor loads only `cursor/skills/review-cycle/SKILL.md` (see `.cursor-plugin/plugin.json`). The wave driver is `workflows/cursor-round.mjs`: it builds each prompt, including the blind verifier prompts, and the Cursor agent launches one Task subagent per prompt.
+
+Unless you pass `--model`, that skill sends `--model grok-4.7-xhigh` for every role. The level table below is the Claude default (Sonnet and Opus).
+
+Cursor needs Node for the driver, plus the same Python and git. Round data for Cursor runs is `~/.cursor/review-cycle`. Install from this repo's Cursor marketplace (`.cursor-plugin/marketplace.json` at the repo root), or symlink `plugins/review-cycle` to `~/.cursor/plugins/local/review-cycle`.
+
 ## Usage
 
 ```
@@ -194,7 +202,7 @@ There is no security lens. Use `/security-review` for that.
 
 ## Project guidance
 
-- Rules are read from `CLAUDE.md`, `AGENTS.md` and `.claude/CLAUDE.md` at the repo root, when present.
+- Rules are read from `CLAUDE.md`, `AGENTS.md` and `.claude/CLAUDE.md` at the repo root, when present, plus Markdown files under `.cursor/rules`.
 - `REVIEW.md` is read as of the merge-base, never from the branch under review, so a branch cannot weaken its own review. Its skip paths, severity recalibration and nit cap are honoured.
 - Stated intent comes from the PR body (`gh`), commit messages, Markdown files they link, and `--intent`. If there is none, the report says so.
 - When the same class of finding is marked `wrong` several times in a repo, the report suggests one `REVIEW.md` line. It never writes the file.

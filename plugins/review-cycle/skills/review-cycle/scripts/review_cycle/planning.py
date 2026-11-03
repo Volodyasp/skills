@@ -19,6 +19,7 @@ from review_cycle.snapshot import Snapshot, read_current
 WORKFLOW_NAME = "review-cycle:round"
 VERIFIER_SECTION = "## Verifier"
 _RULES_FILES = ("CLAUDE.md", "AGENTS.md", ".claude/CLAUDE.md")
+_CURSOR_RULE_SUFFIXES = {".md", ".mdc", ".markdown"}
 _LOCK_NAMES = frozenset({"package-lock.json", "pnpm-lock.yaml", "go.sum"})
 _LINKED_DOC = re.compile(r"[\w./-]+\.md")
 _REFERENCES_DIR = Path(__file__).resolve().parents[2] / "references"
@@ -477,6 +478,20 @@ def _warning(mode: str, level: str, scope: dict, state: dict | None) -> str | No
     )
 
 
+def _rules_files(repo: Path) -> list[str]:
+    """Absolute paths of project rules: Claude/AGENTS files, then `.cursor/rules`."""
+    found = [str(repo / rel) for rel in _RULES_FILES if (repo / rel).is_file()]
+    rules_dir = repo / ".cursor" / "rules"
+    if rules_dir.is_dir():
+        extra = [
+            path
+            for path in rules_dir.rglob("*")
+            if path.is_file() and path.suffix in _CURSOR_RULE_SUFFIXES
+        ]
+        found.extend(str(path) for path in sorted(extra))
+    return found
+
+
 def assemble_plan(req: PlanReq, run: Run, snap: Snapshot, state: dict | None, forced: bool) -> dict:
     """Build `plan.json` content (ST-1) for the next round.
 
@@ -497,7 +512,7 @@ def assemble_plan(req: PlanReq, run: Run, snap: Snapshot, state: dict | None, fo
     recheck = _recheck_list(state)
     recheck_file = verify / "recheck.json"
     store.write_text(recheck_file, json.dumps(recheck, ensure_ascii=False, indent=2) + "\n")
-    rules = [str(run.repo / rel) for rel in _RULES_FILES if (run.repo / rel).is_file()]
+    rules = _rules_files(run.repo)
     plan: dict[str, Any] = {
         "v": 1,
         "plan_id": uuid.uuid4().hex,

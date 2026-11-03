@@ -135,6 +135,21 @@ def test_skill_frontmatter_declares_name_flags_and_tools() -> None:
     assert {"Bash(review-cycle-state *)", "Workflow", "Workflow(review-cycle:round)"} <= tools
 
 
+def test_cursor_skill_is_separate_and_uses_grok() -> None:
+    """Cursor loads cursor/skills only; the Claude skill stays on the Workflow tool."""
+    cursor = PLUGIN_DIR / "cursor" / "skills" / "review-cycle" / "SKILL.md"
+    claude = SKILL_DIR / "SKILL.md"
+    cursor_text = cursor.read_text(encoding="utf-8")
+    claude_front = _frontmatter(claude)
+    assert "name: review-cycle" in _frontmatter(cursor)
+    assert "cursor-round.mjs" in cursor_text
+    assert "grok-4.7-xhigh" in cursor_text
+    assert "Task" in cursor_text
+    tools = {line.strip()[2:] for line in claude_front if line.startswith("  - ")}
+    assert "Workflow(review-cycle:round)" in tools
+    assert "Workflow" not in cursor_text
+
+
 def test_skill_md_handles_every_next_value() -> None:
     headings = _headings(SKILL_DIR / "SKILL.md")
     expected = {"workflow", "print-report", "ask", "choose"}
