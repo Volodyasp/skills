@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from review_cycle import docmode, gitio, rounds, store
+from review_cycle import docmode, gitio, radius, rounds, store
 from review_cycle import findings as fnd
 from review_cycle.cli import PlanReq
 from review_cycle.levels import SMALL_DIFF_MAX_FILES, SMALL_DIFF_MAX_LINES, level_config
@@ -290,8 +290,15 @@ def _workflow_args(plan: dict, req: PlanReq) -> dict:
     }
 
 
-def _level_recommendation(state: dict | None, data_dir: Path) -> tuple[str, str]:
-    """Return (level, reason) recommended when no level is typed (RPT-18)."""
+def _level_recommendation(snap: Snapshot, state: dict | None, data_dir: Path) -> tuple[str, str]:
+    """Return (level, reason) recommended when no level is typed (RPT-18).
+
+    Code mode measures the whole branch every round, so an incremental round keeps the level
+    the change as a whole calls for.
+    """
+    if snap.mode == "code":
+        counted, lines = _code_counted(snap, sorted(snap.file_ids))
+        return radius.suggest_level(counted, lines)
     if state and state["rounds"]:
         return state["rounds"][-1]["level"], "last round's level"
     remembered = store.last_level(data_dir)
@@ -405,7 +412,7 @@ def build_choice(
     ask_scope = n >= 2 and not forced and not req.full and not req.incremental
     if not ask_level and not ask_scope:
         return None
-    rec_level, level_reason = _level_recommendation(state, data_dir)
+    rec_level, level_reason = _level_recommendation(snap, state, data_dir)
     effective_level = req.level if req.level is not None else rec_level
     recheck_n = len(_recheck_list(state))
     rec_scope_word = "full"

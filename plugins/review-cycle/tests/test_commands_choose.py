@@ -11,6 +11,7 @@ from conftest import GitRepo
 from helpers_git import UTIL, Rc, append_commit, make_rc, seed_branch, set_remote_ref
 from helpers_result import build_result, cand
 from review_cycle import planning
+from review_cycle.snapshot import Snapshot
 
 DOC = "docs/spec.md"
 DOC_TARGET = "doc-docs-spec-md"
@@ -42,11 +43,11 @@ def test_round_one_with_no_level_asks_only_for_the_level(rc: Rc) -> None:
     assert out.get("question-level") == "Review level for round 1?"
     assert "question-scope" not in out.keys
     options = out.all("option-level")
-    assert _words(options) == ["high", "medium", "low", "xhigh"]
-    assert re.fullmatch(r"high \| recommended \(default\) · ~\d+ agents", options[0])
+    assert _words(options) == ["low", "high", "medium", "xhigh"]
+    assert re.fullmatch(r"low \| recommended \(3 lines, 2 files\) · ~\d+ agents", options[0])
     for opt in options[1:]:
         assert re.fullmatch(r"\w+ \| ~\d+ agents", opt)
-    assert out.get("recommended") == "high"
+    assert out.get("recommended") == "low"
     assert not (rc.state_dir() / "plan.json").exists()
     assert not (rc.state_dir() / "state.json").exists()
     assert not (rc.data_dir / "last-level").exists()
@@ -84,7 +85,7 @@ def test_round_two_with_nothing_typed_asks_both(rc: Rc) -> None:
     assert out.get("next") == "choose"
     assert out.keys.index("question-level") < out.keys.index("question-scope")
     assert out.has("question-level") and out.has("question-scope")
-    assert out.get("recommended") == "high --incremental"
+    assert out.get("recommended") == "low --incremental"
 
 
 @pytest.mark.parametrize("flag", ["--full", "--incremental"])
@@ -233,7 +234,7 @@ def test_incremental_flag_without_a_level_asks_only_for_the_level(rc: Rc) -> Non
     out = rc.cli("--incremental")
     assert out.get("next") == "choose"
     assert out.has("question-level") and "question-scope" not in out.keys
-    assert out.get("recommended") == "high"
+    assert out.get("recommended") == "low"
 
 
 def test_doc_mode_round_one_with_no_level_asks_only_for_the_level(rc: Rc) -> None:
@@ -357,49 +358,101 @@ def test_level_options_exact_text_for_a_known_small_diff_fixture(rc: Rc) -> None
     seed_branch(rc.repo)
     out = rc.cli()
     assert out.all("option-level") == [
-        "high | recommended (default) · ~8 agents",
+        "low | recommended (3 lines, 2 files) · ~6 agents",
+        "high | ~8 agents",
         "medium | ~6 agents",
-        "low | ~6 agents",
         "xhigh | ~8 agents",
     ]
+    assert out.get("recommended") == "low"
+
+
+def test_code_level_comes_from_the_whole_branch_not_the_last_round(rc: Rc) -> None:
+    """RPT-18: in code mode the branch's radius wins over the last round's level, and round 2
+    measures the whole branch (64 lines -> medium), not the one-line change since round 1."""
+    seed_branch(rc.repo, big=True)
+    rc.round_trip(tokens=["xhigh"])
+    append_commit(rc.repo, UTIL, "# edit")
+    out = rc.cli()
+    options = out.all("option-level")
+    assert options[0].startswith("medium | recommended (64 lines, 4 files) · ")
+    assert out.get("recommended") == "medium --incremental"
+
+
+def test_code_level_ignores_the_remembered_level(rc: Rc) -> None:
+    """RPT-18: a remembered `last-level` does not override the branch's radius in code mode."""
+    seed_branch(rc.repo)
+    rc.cli("xhigh")  # writes last-level; no merge yet, so no state
+    out = rc.cli()
+    assert out.get("recommended") == "low"
+
+
+def test_code_level_names_sensitive_paths(rc: Rc) -> None:
+    """RPT-18: a migration lifts a small change to `high` and the reason says why."""
+    rc.repo.commit({"src/a.py": "1\n"}, "base")
+    rc.repo.branch("feature/migration")
+    rc.repo.commit({"db/migrations/0002_add.sql": "alter table t add c int;\n"}, "work")
+    out = rc.cli()
+    options = out.all("option-level")
+    assert options[0].startswith("high | recommended (1 line, 1 file; sensitive: migrations) · ")
     assert out.get("recommended") == "high"
 
 
-def test_level_reason_last_rounds_level(rc: Rc) -> None:
-    """RPT-18: with a prior round, the recommendation reason is `last round's level`."""
-    seed_branch(rc.repo)
-    rc.round_trip(tokens=["medium"])
-    append_commit(rc.repo, UTIL, "# edit")
+def test_code_level_leaves_lock_files_out_of_the_radius(rc: Rc) -> None:
+    """RPT-18: lock files count toward neither lines nor files, as in the small-diff rule."""
+    rc.repo.commit({"a.py": "1\n"}, "base")
+    rc.repo.branch("feature/locks")
+    rc.repo.commit({"a.py": "1\n1\n", "uv.lock": "x\n" * 900}, "work")
     out = rc.cli()
+    assert out.all("option-level")[0].startswith("low | recommended (1 line, 1 file) · ")
+
+
+def _doc_round(rc: Rc, level: str) -> None:
+    """Run a merged document-mode round at `level`, then edit one section."""
+    rc.repo.branch("feature/doc")
+    rc.repo.write(DOC, DOC_TEXT)
+    rc.cli(DOC, level)
+    rc.merge(build_result(rc.plan_json(DOC_TARGET)), DOC_TARGET)
+    rc.repo.write(DOC, DOC_TEXT.replace("risk text", "risk text, edited"))
+
+
+def test_doc_level_reason_last_rounds_level(rc: Rc) -> None:
+    """RPT-18: in document mode, with a prior round, the reason is `last round's level`."""
+    _doc_round(rc, "medium")
+    out = rc.cli(DOC)
     options = out.all("option-level")
     assert options[0].startswith("medium | recommended (last round's level) · ")
     assert out.get("recommended") == "medium --incremental"
 
 
-def test_level_reason_last_used_level(rc: Rc, data_dir: Path) -> None:
-    """RPT-18: no prior round but a remembered level -> reason `last used level`."""
-    seed_branch(rc.repo)
-    rc.cli("medium")  # writes last-level; no merge yet, so no state
-    out = rc.cli()
+def test_doc_level_reason_last_used_level(rc: Rc) -> None:
+    """RPT-18: document mode, no prior round but a remembered level -> `last used level`."""
+    rc.repo.branch("feature/doc")
+    rc.repo.write(DOC, DOC_TEXT)
+    rc.cli(DOC, "medium")  # writes last-level; no merge yet, so no state
+    out = rc.cli(DOC)
     options = out.all("option-level")
     assert options[0].startswith("medium | recommended (last used level) · ")
     assert out.get("recommended") == "medium"
 
 
-def test_level_reason_default(rc: Rc) -> None:
-    """RPT-18: no prior round, no remembered level -> reason `default`, level `high`."""
-    seed_branch(rc.repo)
-    out = rc.cli()
+def test_doc_level_reason_default(rc: Rc) -> None:
+    """RPT-18: document mode, no prior round, no remembered level -> `high`, reason `default`."""
+    rc.repo.branch("feature/doc")
+    rc.repo.write(DOC, DOC_TEXT)
+    out = rc.cli(DOC)
     options = out.all("option-level")
     assert options[0].startswith("high | recommended (default) · ")
     assert out.get("recommended") == "high"
 
 
-def test_level_reason_default_when_the_remembered_level_is_invalid(rc: Rc, data_dir: Path) -> None:
+def test_doc_level_reason_default_when_the_remembered_level_is_invalid(
+    rc: Rc, data_dir: Path
+) -> None:
     """RPT-18: an invalid `last-level` value falls back to `high`/`default`, same as no file."""
-    seed_branch(rc.repo)
+    rc.repo.branch("feature/doc")
+    rc.repo.write(DOC, DOC_TEXT)
     (data_dir / "last-level").write_text("bogus\n", encoding="utf-8")
-    out = rc.cli()
+    out = rc.cli(DOC)
     options = out.all("option-level")
     assert options[0].startswith("high | recommended (default) · ")
     assert out.get("recommended") == "high"
@@ -407,19 +460,15 @@ def test_level_reason_default_when_the_remembered_level_is_invalid(rc: Rc, data_
 
 def test_level_option_order_when_the_recommendation_is_low(rc: Rc) -> None:
     """RPT-18: recommended first, then the first 3 of the priority list without it."""
-    seed_branch(rc.repo)
-    rc.round_trip(tokens=["low"])
-    append_commit(rc.repo, UTIL, "# edit")
-    out = rc.cli()
+    _doc_round(rc, "low")
+    out = rc.cli(DOC)
     assert _words(out.all("option-level")) == ["low", "high", "medium", "xhigh"]
 
 
 def test_level_option_order_when_the_recommendation_is_max(rc: Rc) -> None:
     """RPT-18: recommended first, then the first 3 of the priority list without it."""
-    seed_branch(rc.repo)
-    rc.round_trip(tokens=["max"])
-    append_commit(rc.repo, UTIL, "# edit")
-    out = rc.cli()
+    _doc_round(rc, "max")
+    out = rc.cli(DOC)
     assert _words(out.all("option-level")) == ["max", "high", "medium", "low"]
 
 
@@ -440,7 +489,11 @@ def test_incremental_on_unchanged_code_does_not_force_a_rerun(rc: Rc) -> None:
 
 
 def test_level_recommendation_with_a_state_of_zero_rounds() -> None:
-    """RPT-18: `state["rounds"] == []` is falsy, so the recommendation still falls through to
-    the remembered/default level, not `state["rounds"][-1]`."""
+    """RPT-18: `state["rounds"] == []` is falsy, so the document-mode recommendation still falls
+    through to the remembered/default level, not `state["rounds"][-1]`."""
+    snap = Snapshot(mode="document", target=DOC_TARGET, change_id="", file_ids={}, head_sha="")
     state: dict[str, list[dict[str, str]]] = {"rounds": []}
-    assert planning._level_recommendation(state, Path("/does/not/exist")) == ("high", "default")
+    assert planning._level_recommendation(snap, state, Path("/does/not/exist")) == (
+        "high",
+        "default",
+    )

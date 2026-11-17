@@ -1,7 +1,7 @@
 {
   "name": "review-cycle",
   "displayName": "Review Cycle",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Multi-round code and document review: parallel finders, blind verifiers, tie-break and sweep, with durable per-branch state and a short report.",
   "author": {
     "name": "Vladimir Suponin",
