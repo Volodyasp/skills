@@ -61,7 +61,7 @@ You can also ask in plain words, in any language: "run review-cycle at high on t
 
 When the level is missing, or the scope is missing from round 2 on, the skill asks before it starts. Each option shows how many agents it would run, and the recommended one comes first:
 
-- level: the last round's level on this branch, else the last level you used, else `high`;
+- level: in code mode, the level the whole branch's size and paths call for (see [Suggested level](#suggested-level-code-mode)); in document mode, the last round's level on this document, else the last level you used, else `high`;
 - scope: `--incremental`, or `--full` in the cases listed under [Rounds](#rounds).
 
 Without the question tool, for example in `claude -p`, the recommended values are used and the skill says so.
@@ -134,6 +134,37 @@ Without `--model`, Haiku is never used as a verifier or tie-break.
 ### Small-diff rule (code mode only)
 
 When the round's scope is at most 50 changed lines in at most 3 files (lock and generated files excluded), only the first 2 finders of the level run. Document mode never reduces finders. The start values are round numbers with no data behind them and will be tuned from real runs. The plan line shows `small-diff: <from> → <to> finders` when it applies.
+
+### Suggested level (code mode)
+
+When you do not type a level, the recommended option comes from the whole branch against its base, every round, so a small incremental round after fixes keeps the level the change as a whole calls for. Lines and files leave out lock files, as in the small-diff rule.
+
+| Changed lines | Changed files | Suggested |
+|---|---|---|
+| ≤ 50 | ≤ 3 | `low` |
+| ≤ 200 | ≤ 10 | `medium` |
+| ≤ 500 | ≤ 30 | `high` |
+| more | more | `xhigh` |
+
+The higher of the two columns wins. Then:
+
+- A sensitive path lifts the suggestion to at least `high`: a `migrations`, `migration` or `migrate` directory; CI files (`.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile`, `.circleci/`, `.buildkite/`, `azure-pipelines.yml`); `Dockerfile*` and `*.tf`; an `auth`, `security` or `permissions` directory or file name.
+- A branch made only of docs (`.md`, `.rst`, `.txt` and similar) is capped at `medium`, the lowest level with the rules lens that catches stale docs.
+- `max` is never suggested; type it when you want it.
+
+The option says why, for example `xhigh | recommended (6319 lines, 78 files; sensitive: migrations) · ~11 agents`. It is a suggestion: pick another option or type a level.
+
+Where the numbers come from:
+
+- Anthropic's [Code Review](https://claude.com/blog/code-review): "Large or complex changes get more agents and a deeper read; trivial ones get a lightweight pass." Under 50 lines, 31% of PRs get findings (0.5 issues on average); over 1,000 lines, 84% (7.5).
+- 200 lines: the review size below which reviewers still find defects at a high rate ([Cisco/SmartBear](https://static0.smartbear.co/support/media/resources/cc/book/code-review-cisco-case-study.pdf)) and GitLab's "around 200 lines is a good target" ([GitLab](https://docs.gitlab.com/ee/development/code_review.html)).
+- 500 lines: the common large-change border (Kubernetes `size/XL`, GitLab's "more than 500 changes", gitlab-dangerfiles' warning).
+- Files: 90% of Google's changes touch fewer than 10 files ([Sadowski et al. 2018](https://sback.it/publications/icse2018seip.pdf)); file count and changes spread over subsystems predict defects ([Kamei et al. 2013](https://sail.cs.queensu.ca/data/pdfs/TSE_ALarge-ScaleEmpiricalStudyOfJust-in-TimeQualityAssurance.pdf), [Mockus & Weiss 2000](https://mockus.org/papers/bltj13.pdf)); Greptile's docs escalate PRs over 30 files.
+- Sensitive paths as a floor, not a size step: PR-Agent rates "any sensitive domain" at least High; Anthropic's [Code Review docs](https://code.claude.com/docs/en/code-review-customize) treat migrations as Important and the Claude Code team always has a person review CI workflow files.
+- Docs as the lowest risk: Anthropic's [Claude Code team](https://claude.dev/blog/solving-code-review-at-anthropic/) puts "Docs, copy" in its lowest tier. Tests-only changes are not lowered: test files are as defect-prone as code ([Spadini et al. 2018](https://zenodo.org/records/1688846/files/TUD-SERG-2018-004.pdf)).
+- `max` stays manual, as in the bundled `/code-review` and Anthropic's [effort guidance](https://platform.claude.com/docs/en/build-with-claude/effort).
+
+No source publishes a mapping from diff to review depth, so the borders are these sources' sizes, not a measured optimum. They will be tuned from real runs, like the small-diff rule. Not used on purpose: counting only added lines (deleted lines predict defects poorly, but every size border above counts both) and a separate count of directories touched (the file count already rises with it).
 
 ## What the report looks like
 
